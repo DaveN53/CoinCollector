@@ -4,10 +4,13 @@ ETH='ETH'
 BTC='BTC'
 USD='USD'
 
-class FeedBase(ABCMeta):
 
-    def get_value(cls, coin):
+class FeedBase(object):
+    __metaclass__ = ABCMeta
+
+    @property
+    def value(self):
         raise NotImplementedError
 
-    def get_coins(cls):
+    def get_available_coins(cls):
         raise NotImplementedError
