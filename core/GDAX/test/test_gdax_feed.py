@@ -1,6 +1,6 @@
 import pytest
 import logging
-from core.GDAX.feed_manager import *
+from core.GDAX.gdax_trader import *
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ Change ENV to 2.7. These will not work with ironpython env
 
 @pytest.fixture
 def gdax_f_man():
-    return GDAXFeedManager()
+    return GDAXTrader()
 
 
 def test_get_coins(gdax_f_man):

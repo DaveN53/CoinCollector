@@ -9,6 +9,7 @@ from System.Windows.Markup import XamlReader
 from System.IO import File
 
 import logging
+from frontend.xaml_view import XAMLView
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
@@ -24,6 +25,9 @@ TabControl = System.Windows.Controls.TabControl
 class CollectorView(Window):
 
     def __init__(self):
+        self.xaml_view = XAMLView('E:\Dev\CoinCollectorTemplate\CoinCollectorTemplate\MainWindow.xaml')
+        self.window = self.xaml_view.window
+        '''
         self.stack = StackPanel()
         self.Content = self.stack
 
@@ -37,6 +41,7 @@ class CollectorView(Window):
 
         self.gain_box = TextBox()
         self.stack.Children.Add(self.gain_box)
+        '''
 
         timer = Timer()
         timer.Tick += self.update_view
@@ -47,42 +52,6 @@ class CollectorView(Window):
         self.mainwin = XamlReader.Load(self.ui_file)
 
     def update_view(self, sender, args):
-        self.value_label.Content = System.DateTime.Now.ToLongTimeString()
+        self.xaml_view.tabs['dashboard']['robinhood']['eth_wallet'].Content = System.DateTime.Now.ToLongTimeString()\
 
-class CollectorXAMLView():
-    """
-    Content is always a grid
-    """
-    def __init__(self, ui_file):
-        self.ui_file = File.OpenRead(ui_file)
-        self.window = XamlReader.Load(self.ui_file)
-        # Window.Grid.TabControl.Tabs
-        self.window_tabs = self.window.Content.Children[0].Items
-        self.tabs = {}
-        self.store_elements_in_dict()
 
-    def get_tab_children(self, tab_item):
-        return tab_item.Content.Children[0]
-
-    def get_grid_children(self, grid_item):
-        return grid_item.Children
-
-    def store_elements_in_dict(self):
-        for tab in self.window_tabs:
-            self.tabs[tab.Name] = self.get_tab_children_as_dict(tab)
-
-    def get_tab_children_as_dict(self, tab_item):
-        log.info("##################")
-        log.info("{} {}".format(type(tab_item),tab_item.Name))
-        tab_children = {}
-        # tab.Grid.Children
-        if tab_item.Content.Children.Count > 0:
-            #for child in tab.grid.children
-            for child in tab_item.Content.Children:
-                if type(child) is TabControl:
-                    # For tab in tab control
-                    for child_item in child.Items:
-                        if type(child_item) is TabItem:
-                            self.get_tab_children_as_dict(child_item)
-                else:
-                    log.info(child.Name)

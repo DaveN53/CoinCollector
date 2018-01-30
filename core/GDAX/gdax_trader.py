@@ -5,7 +5,7 @@ TEST_REST_URL = 'https://api-public.sandbox.gdax.com'
 REST_URL = 'https://api.gdax.com'
 
 
-class GDAXFeedManager(FeedBase):
+class GDAXTrader(FeedBase):
 
     def __init__(self, coin=ETH, curr=USD):
         self.url = TEST_REST_URL
