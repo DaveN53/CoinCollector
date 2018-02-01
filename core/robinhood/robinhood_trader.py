@@ -1,4 +1,4 @@
-import requests
+from requests import session
 from core.exceptions import RobinhoodException
 
 import logging
@@ -37,7 +37,7 @@ class RobinHoodTrader:
     }
 
     def __init__(self):
-        self.session = requests.session()
+        self.session = session()
         self.headers = {
             "Accept": "*/*",
             "Accept-Encoding": "gzip, deflate",
@@ -63,7 +63,7 @@ class RobinHoodTrader:
             res = self.session.post(self.endpoints['login'], data=payload)
             res.raise_for_status()
             data = res.json()
-        except requests.exceptions.HTTPError:
+        except Exception as e:
             raise RobinhoodException('Login Failed')
 
         if 'mfa_required' in data.keys():  # pragma: no cover
@@ -80,10 +80,32 @@ class RobinHoodTrader:
         try:
             req = self.session.post(self.endpoints['logout'])
             req.raise_for_status()
-        except requests.exceptions.HTTPError as err_msg:
-            log.warn('Failed to log out ' + repr(err_msg))
+        except Exception as e:
+            log.warn('Failed to log out ' + repr(e))
 
         self.headers['Authorization'] = None
         self.auth_token = None
 
+        return req
+
+    def quote_data(self, stock=''):
+        url = None
+
+        if stock.find(',') == -1:
+            url = str(self.endpoints['quotes']) + str(stock) + "/"
+        else:
+            url = str(self.endpoints['quotes']) + "?symbols=" + str(stock)
+
+        # Check for validity of symbol
+        try:
+            req = self.session.get(url)
+            req.raise_for_status()
+            data = req.json()
+        except Exception as e:
+            raise RobinhoodException("Invalid Ticker Symbol")
+
+        return data
+
+    def watchlist(self):
+        req = self.session.get(self.endpoints['watchlists'])
         return req

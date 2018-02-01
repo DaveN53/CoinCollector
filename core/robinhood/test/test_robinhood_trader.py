@@ -13,16 +13,21 @@ Change ENV to 2.7. These will not work with ironpython env
 
 @pytest.fixture
 def trader():
-    return RobinHoodTrader()
-
-def test_robinhood_login(trader):
+    rb_trader =  RobinHoodTrader()
     username = os.environ.get('USERNAME')
     password = os.environ.get('PASSWORD')
-    result = trader.login(username, password)
+    result = rb_trader.login(username, password)
+    log.info(result)
+    yield rb_trader
+
+    rb_trader.logout()
+
+def test_watchlist(trader):
+    result = trader.watchlist()
     assert result
 
-def test_robinhood_logout(trader):
-    result = trader.logout()
+def test_quote_eth(trader):
+    result = trader.quote_data('ETH')
     assert result
 
 

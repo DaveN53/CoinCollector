@@ -10,6 +10,7 @@ from System.IO import File
 
 import logging
 from frontend.xaml_view import XAMLView
+from core.robinhood.robinhood_trader import RobinHoodTrader
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
@@ -27,6 +28,8 @@ class CollectorView(Window):
     def __init__(self):
         self.xaml_view = XAMLView('E:\Dev\CoinCollectorTemplate\CoinCollectorTemplate\MainWindow.xaml')
         self.window = self.xaml_view.window
+        self.robinhood_trader = RobinHoodTrader()
+        self.update()
         '''
         self.stack = StackPanel()
         self.Content = self.stack
@@ -45,13 +48,15 @@ class CollectorView(Window):
 
         timer = Timer()
         timer.Tick += self.update_view
-        timer.Interval = System.TimeSpan.FromSeconds(1)
+        timer.Interval = System.TimeSpan.FromSeconds(5)
         timer.Start()
 
     def load_ui_from_xaml(self):
         self.mainwin = XamlReader.Load(self.ui_file)
 
     def update_view(self, sender, args):
-        self.xaml_view.tabs['dashboard']['robinhood']['eth_wallet'].Content = System.DateTime.Now.ToLongTimeString()\
+        self.update()
 
-
+    def update(self):
+        data = self.robinhood_trader.quote_data('ETH')
+        self.xaml_view.tabs['dashboard']['robinhood']['eth_current'].Content = data['bid_price']
