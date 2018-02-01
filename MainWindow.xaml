@@ -1,0 +1,71 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Coin Collector" Height="450" Width="700">
+    <Grid>
+        <TabControl x:Name="main_tab_control" HorizontalAlignment="Left" Height="420" VerticalAlignment="Top" Width="700">
+            <TabItem x:Name="dashboard" Header="Dashboard">
+                <Grid x:Name="dashboard_grid" Background="#FFE5E5E5">
+                    <TabControl x:Name="dashboard_tab_control" HorizontalAlignment="Left" Height="370" Margin="10,10,0,0" VerticalAlignment="Top" Width="670">
+                        <TabItem x:Name="robinhood" Header="RobinHood">
+                            <Grid Background="#FFE5E5E5">
+                                <Label x:Name="usd_label" Content="USD :" HorizontalAlignment="Left" Margin="6,207,0,0" VerticalAlignment="Top" RenderTransformOrigin="3.462,2.538"/>
+                                <Label x:Name="eth_label" Content="ETH :" HorizontalAlignment="Left" Margin="5,41,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="btc_label" Content="BTC :" HorizontalAlignment="Left" Margin="5,72,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.184,0.154"/>
+                                <Label x:Name="usd_wallet" Content="Label" HorizontalAlignment="Left" Margin="50,207,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.605,-0.038" Background="#00000000"/>
+                                <Label x:Name="eth_wallet" Content="Label" HorizontalAlignment="Left" Margin="50,41,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="btc_wallet" Content="Label" HorizontalAlignment="Left" Margin="50,72,0,0" VerticalAlignment="Top" RenderTransformOrigin="1.579,2.346"/>
+                                <Label x:Name="wallet_label" Content="Wallet" HorizontalAlignment="Left" Margin="50,10,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="bought_label" Content="Bought" HorizontalAlignment="Left" Margin="98,10,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="current_label" Content="Current" HorizontalAlignment="Left" Margin="152,10,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="earned_label" Content="Earned" HorizontalAlignment="Left" Margin="207,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.974,-0.192"/>
+                                <Label x:Name="low_label" Content="Low" HorizontalAlignment="Left" Margin="258,10,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="volume_label" Content="Volume" HorizontalAlignment="Left" Margin="334,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.184,-0.077"/>
+                                <Label x:Name="high_label" Content="High" HorizontalAlignment="Left" Margin="294,10,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="eth_bought" Content="Label" HorizontalAlignment="Left" Margin="98,41,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="eth_earned" Content="Label" HorizontalAlignment="Left" Margin="207,41,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="eth_current" Content="Label" HorizontalAlignment="Left" Margin="152,41,0,0" VerticalAlignment="Top" RenderTransformOrigin="-3.842,-3.731"/>
+                                <Label x:Name="eth_low" Content="Label" HorizontalAlignment="Left" Margin="258,41,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="eth_high" Content="Label" HorizontalAlignment="Left" Margin="294,41,0,0" VerticalAlignment="Top"/>
+                                <Label x:Name="eth_volume" Content="Label" HorizontalAlignment="Left" Margin="334,41,0,0" VerticalAlignment="Top"/>
+                            </Grid>
+                        </TabItem>
+                        <TabItem x:Name="coinbase" Header="Coinbase - GDX">
+                            <Grid Background="#FFE5E5E5"/>
+                        </TabItem>
+                        <TabItem x:Name="binance" Header="Binance">
+                            <Grid Background="#FFE5E5E5">
+                                <TextBox x:Name="transactions_textbox" HorizontalAlignment="Left" Height="111" Margin="10,221,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="644" IsReadOnly="True"/>
+                                <Label Content="Transactions:" HorizontalAlignment="Left" Margin="10,195,0,0" VerticalAlignment="Top"/>
+                                <TextBox x:Name="wallet_textbox" HorizontalAlignment="Left" Height="155" Margin="10,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="320" IsReadOnly="True"/>
+                                <Label Content="Wallet:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.316,0"/>
+                                <TextBox x:Name="exchange_textbox" HorizontalAlignment="Left" Height="155" Margin="334,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="320
+                                         " IsReadOnly="True"/>
+                                <Label Content="Exchange:" HorizontalAlignment="Left" Margin="334,9,0,0" VerticalAlignment="Top"/>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="trades" Header="Trades">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem x:Name="strategies" Header="Strategies">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem x:Name="settings" Header="Settings">
+                <Grid Background="#FFE5E5E5">
+                    <Label Content="Binance:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Api Key:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="binance_api_key" HorizontalAlignment="Left" Height="23" Margin="67,45,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                    <Label Content="Api Secret:" HorizontalAlignment="Left" Margin="192,42,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="binance_api_secret" HorizontalAlignment="Left" Height="23" Margin="263,46,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                    <Button x:Name="binance_save" Content="Save" HorizontalAlignment="Left" Margin="388,48,0,0" VerticalAlignment="Top" Width="75" ToolTip="Save entered api data"/>
+                    <Button x:Name="binance_clear" Content="Clear" HorizontalAlignment="Left" Margin="468,48,0,0" VerticalAlignment="Top" Width="75" ToolTip="Clear saved api data"/>
+                    <Label Content="Coin Watchlist:" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="23" Margin="103,73,0,0" Text="ETH,BNB,BTC,FUN,TRX" VerticalAlignment="Top" Width="155" ToolTip="Enter a comma separated list of coins. Example: ETH,BTC,TRX"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
