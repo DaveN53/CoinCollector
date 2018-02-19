@@ -1,39 +1,48 @@
 import requests
 from binance.client import Client
 
+
 class BinanceTrader:
 
-    def __int__(self, api_key, api_secret):
+    def __init__(self, api_key, api_secret, market_coin='ETH'):
         self.client = Client(api_key=api_key, api_secret=api_secret)
+        self.market_coin = market_coin
 
-    def get_exchange_rate(self, buy_coin, sell_coin):
+    def get_last_bid(self, coin='BNB'):
+        orders = self.get_order_book(coin=coin)
+        bids = orders['bids']
+        price = bids[0][0]
+        quantity = bids[0][1]
+        return price
+
+    def get_order_book(self, coin='BNB'):
         """
-        symbol='BNBBTC'
-        :param buy_coin:
-        :param sell_coin:
+        symbol='BNBETH'
+        :param coin: Coin to exchange for market coin
         :return:
         """
-        symbol = buy_coin + sell_coin
+        symbol = coin + self.market_coin
+        print(symbol)
         result = self.client.get_order_book(symbol=symbol)
         return result
 
-    def get_buy_rate(self, buy_coin, sell_coin='BNB'):
+    def get_symbol_info(self, coin='BNB'):
         """
-        Trade buy coin for sell coin(BNB)
-        :param buy_coin:
-        :param sell_coin:
+        :param coin:
         :return:
         """
-        return self.get_exchange_rate(buy_coin=buy_coin, sell_coin=sell_coin)
+        symbol = coin + self.market_coin
+        result = self.client.get_symbol_info(symbol=symbol)
+        return result
 
-    def get_sell_rate(self,  sell_coin, buy_coin='BNB'):
-        """
-        Trade sell coin for buy coin(BNB)
-        :param sell_coin:
-        :param buy_coin:
-        :return:
-        """
-        return self.get_exchange_rate(buy_coin=buy_coin, sell_coin=sell_coin)
+    def get_price_info(self, coin='BNB'):
+        result = self.get_symbol_info(coin=coin)
+        filters = result['filters'][0]
+        price = {
+            'min': filters['minPrice'],
+            'max': filters['maxPrice']
+        }
+        return price
 
     def login(self):
         raise NotImplementedError

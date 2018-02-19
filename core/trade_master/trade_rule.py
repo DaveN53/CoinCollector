@@ -1,5 +1,10 @@
 
 class TradeRule:
+    """
+    Things to check out:
+    Black–Scholes model
+    k-nearest neighbors algorithm
+    """
 
     def __int__(self, buy_threshold, sell_threshold):
         self.buy_threshold = buy_threshold

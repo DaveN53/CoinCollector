@@ -9,7 +9,7 @@ from System.Windows.Markup import XamlReader
 from System.IO import File
 
 import logging
-from frontend.xaml_view import XAMLView
+from frontend_old.xaml_view import XAMLView
 from core.robinhood.robinhood_trader import RobinHoodTrader
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
