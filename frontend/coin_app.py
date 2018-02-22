@@ -3,8 +3,9 @@ from core.database.config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask import render_template
-import datetime
+import time
 from core.binance.binance_trader import BinanceTrader
+from core.database.db_helper import DBHelper
 
 
 
@@ -16,6 +17,7 @@ binance_trader = None
 api_key = 'Xwme4vyRvhCSRZzJDpqgzTllB2WyrfKG5hpeHEXRjQ4XEg9iOK41tJxiQlIgsRfI'
 api_secret = 'JofglM7AOlroYhca0sFIHX6KsTqTuIs6S27w7EBr97DpWTV6VWReOO0AfzW180I5'
 binance_trader = BinanceTrader(api_key=api_key, api_secret=api_secret)
+db_help = DBHelper()
 
 
 # DB setup
@@ -23,8 +25,8 @@ class Coin(coin_db.Model):
     id = coin_db.Column(coin_db.Integer, primary_key=True)
     coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
     market_coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
-    value_market = coin_db.Column(coin_db.String(64), index=True, unique=False)
-    date = coin_db.Column(coin_db.String(64), index=True, unique=False)
+    value_market = coin_db.Column(coin_db.Float, index=True, unique=False)
+    date = coin_db.Column(coin_db.Float, index=True, unique=False)
 
     def __repr__(self):
         return '<Coin {}>'.format(self.symbol)
@@ -36,8 +38,7 @@ coin_db.create_all()
 # API
 @app.route('/time')
 def get_time():
-    time = datetime.datetime.now()
-    return jsonify(time)
+    return jsonify(time.time())
 
 
 @app.route('/buy/rate/<symbol>')
@@ -53,24 +54,58 @@ def get_buy_rate(symbol=None):
     return jsonify(data)
 
 
+@app.route('/graph')
+def graph_data():
+    symbol = 'BNB'
+    market_coin_symbol = 'ETH'
+    graph_data = query_coin_db(symbol, market_coin_symbol)
+
+    data = {
+        'value': graph_data['data'][0],
+        'graph_data': graph_data
+    }
+    return jsonify(data)
+
+
 @app.route('/update')
 def update():
-    global binance_trader, coin_db
+    global coin_db
     data = {}
     if binance_trader is not None:
-        symbol = 'BNB'
-        value = binance_trader.get_last_bid(symbol)
-        session[symbol] = value
-        coin = Coin(
-            coin_symbol=symbol,
-            market_coin_symbol='ETH',
-            value_market=value,
-            date=str(datetime.datetime.now())
-        )
-        coin_db.session.add(coin)
-        coin_db.session.commit()
-        data = {'value': value}
+        data = update_binance()
+
     return jsonify(data)
+
+
+def update_binance(symbol, market_coin_symbol):
+    global binance_trader, db_help
+    value = binance_trader.get_last_bid(symbol)
+    commit_coin_value(value, symbol, market_coin_symbol)
+    graph_data = query_coin_db(symbol, market_coin_symbol)
+
+    data = {
+        'value': value,
+        'graph_data': graph_data
+    }
+    return data
+
+
+def commit_coin_value(value, symbol, market_coin_symbol):
+    coin = Coin(
+        coin_symbol=symbol,
+        market_coin_symbol=market_coin_symbol,
+        value_market=value,
+        date=str(time.time())
+    )
+    coin_db.session.add(coin)
+    coin_db.session.commit()
+
+
+def query_coin_db(symbol, market_coin_symbol):
+    coin_data = Coin.query.filter_by(coin_symbol=symbol).all()
+    graph_data = db_help.retrieve_graph_data_for_time_period(coin_data=coin_data)
+    graph_data['label'] = "{}/{}".format(symbol, market_coin_symbol)
+    return graph_data
 
 
 @app.route('/database')
@@ -86,7 +121,6 @@ def show_entries():
 @app.route('/index')
 def index(data=''):
     user = {'username': 'David'}
-    time = datetime.datetime.now()
-    return render_template('index.html', title='CoinCollector', user=user, time=time)
+    return render_template('index.html', title='CoinCollector', user=user, time=time.time())
 
 app.run()

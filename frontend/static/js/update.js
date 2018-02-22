@@ -1,29 +1,52 @@
-update_time = 2000
-setTimeout(poll, update_time); // every 10 seconds
+$.get('/graph', updateCallback)
+
+update_time = 60 * 1000
+setTimeout(poll, update_time);
 
 function poll(){
  $.get('/update', updateCallback);
 }
 
+graph_data = { 'labels' : [], 'data': []}
+
 function updateCallback(data, textStatus){
   $('#time_div').html(data); // just replace a chunk of text with the new text
   $('#eth_price').html(data['value']);
+  graph_data = data['graph_data']
+  renderGraph()
   setTimeout(poll, update_time);
 }
 
-var ctx = document.getElementById('linechart').getContext('2d');
-var myChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    datasets: [{
-      label: 'apples',
-      data: [12, 19, 3, 17, 6, 3, 7],
-      backgroundColor: "rgba(153,255,51,0.4)"
-    }, {
-      label: 'oranges',
-      data: [2, 29, 5, 5, 2, 3, 10],
-      backgroundColor: "rgba(255,153,0,0.4)"
-    }]
-  }
-});
+function renderGraph(){
+    var ctx = document.getElementById('linechart').getContext('2d');
+    var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: graph_data['labels'],
+        datasets: [{
+          label: graph_data['label'],
+          data: graph_data['data'],
+          backgroundColor: "rgba(153,255,51,0.4)"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+                yAxes: [{
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 10,
+                        min: graph_data['min'],
+                        max: graph_data['max']
+                    }
+                }],
+                xAxes: [{
+                    ticks: {
+                        maxTicksLimit: graph_data['num_labels'],
+                    }
+                }]
+            }
+      }
+    });
+}
