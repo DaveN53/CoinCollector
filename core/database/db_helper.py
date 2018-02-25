@@ -12,25 +12,24 @@ class DBHelper:
         :return:
         """
         interval = HOUR * period
-        graph_data = {'labels': [], 'data': []}
+        graph_data = {'data': []}
 
-        min_value = max_value = coin_data[0].value_market
-        for coin in coin_data:
+        if coin_data:
+            min_value = max_value = coin_data[0].value_market
+            for coin in coin_data:
+                if coin.value_market > max_value:
+                    max_value = coin.value_market
+                elif coin.value_market < min_value:
+                    min_value = coin.value_market
+                graph_data['data'].append([coin.date * 1000, coin.value_market])
 
-            value = coin.value_market
-            if value > max_value:
-                max_value = value
-            elif value < min_value:
-                min_value = value
-
-            date_label = time.strftime(
-                '%Y-%m-%d %H:%M:%S',
-                time.localtime(coin.date)
-            )
-            graph_data['labels'].append(date_label)
-            graph_data['data'].append(value)
-
-        graph_data['min'] = min_value
-        graph_data['max'] = max_value
-        graph_data['num_labels'] = NUM_LABELS
+            graph_data['min'] = min_value
+            graph_data['max'] = max_value
+            graph_data['num_labels'] = NUM_LABELS
         return graph_data
+
+    def get_delete_time(self, time_period_hours=168):
+        time_period_milli = time_period_hours * HOUR
+        time_now = time.time()
+        delete_time = time_now - time_period_milli
+        return delete_time

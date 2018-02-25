@@ -1,16 +1,39 @@
 <html>
     <head>
-        <title>{{ title }}</title>
+        <title>Coin Collector</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="{{url_for('static', filename='css/index.css') }}">
+
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script src="https://code.highcharts.com/modules/series-label.js"></script>
+        <script src="https://code.highcharts.com/modules/exporting.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     </head>
     <body>
-        <h1>Hello, {{ user.username }}!</h1>
-        <div id="time_div">{{ time }} </div>
-        <div id="eth_price"></div>
-        <div>
-            <canvas id="linechart" width="1000" height="450"></canvas>
+        <div class="whiznav">
+            <!--<img height='50px' src="{{ url_for('static',filename='wizard.svg') }}" alt="">-->
+
+            <a>Coin Collector</a>
+            <div class="search-container">
+                <form action='/Search' method="post">
+                    <input type="text" placeholder="Search..." name="search_string">
+                    <button type="submit"><i class="fa fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+        <div class="row"></div>
+            <div class="section">
+                <button type="button" class="btn btn-primary" title="Order for the price you would like to buy at">Create Bid</button>
+                <button type="button" class="btn btn-secondary" title="Order for the price you would like to sell at">Create Ask</button>
+                <div id="time_div">{{ time }} </div>
+                <div id="eth_price"></div>
+            </div>
+            <div class="section">
+                <div id="linehighchart"></div>
+            </div>
         </div>
         <script type=text/javascript src="{{url_for('static', filename='js/update.js') }}"></script>
     </body>

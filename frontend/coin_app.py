@@ -60,8 +60,11 @@ def graph_data():
     market_coin_symbol = 'ETH'
     graph_data = query_coin_db(symbol, market_coin_symbol)
 
+    value = 0
+    if graph_data['data']:
+        value = graph_data['data'][len(graph_data['data'])-1][1]
     data = {
-        'value': graph_data['data'][0],
+        'value': value,
         'graph_data': graph_data
     }
     return jsonify(data)
@@ -72,7 +75,9 @@ def update():
     global coin_db
     data = {}
     if binance_trader is not None:
-        data = update_binance()
+        symbol = 'BNB'
+        market_coin_symbol = 'ETH'
+        data = update_binance(symbol, market_coin_symbol)
 
     return jsonify(data)
 
@@ -102,10 +107,20 @@ def commit_coin_value(value, symbol, market_coin_symbol):
 
 
 def query_coin_db(symbol, market_coin_symbol):
+    delete_old_coin()
     coin_data = Coin.query.filter_by(coin_symbol=symbol).all()
     graph_data = db_help.retrieve_graph_data_for_time_period(coin_data=coin_data)
     graph_data['label'] = "{}/{}".format(symbol, market_coin_symbol)
     return graph_data
+
+
+def delete_old_coin():
+    delete_time = db_help.get_delete_time(time_period_hours=6)
+    coin_data = Coin.query.all()
+    for coin in coin_data:
+        if coin.date < delete_time:
+            coin_db.session.delete(coin)
+    coin_db.session.commit()
 
 
 @app.route('/database')

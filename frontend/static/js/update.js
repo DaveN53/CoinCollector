@@ -18,35 +18,53 @@ function updateCallback(data, textStatus){
 }
 
 function renderGraph(){
-    var ctx = document.getElementById('linechart').getContext('2d');
-    var myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: graph_data['labels'],
-        datasets: [{
-          label: graph_data['label'],
-          data: graph_data['data'],
-          backgroundColor: "rgba(153,255,51,0.4)"
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-                yAxes: [{
-                    ticks: {
-                        autoSkip: true,
-                        maxTicksLimit: 10,
-                        min: graph_data['min'],
-                        max: graph_data['max']
-                    }
-                }],
-                xAxes: [{
-                    ticks: {
-                        maxTicksLimit: graph_data['num_labels'],
-                    }
-                }]
-            }
-      }
-    });
+  Highcharts.chart('linehighchart', {
+
+    title: {
+        text: graph_data['label']
+    },
+
+    subtitle: {
+        text: 'Exchange rate over time'
+    },
+    xAxis: {
+                type: 'datetime'
+            },
+    yAxis: {
+        title: {
+            text: 'Value: ' + graph_data['label']
+        }
+    },
+    legend: {
+        enable: false
+    },
+    scrollbar: {
+        enabled: false
+    },
+
+    plotOptions: {
+        area: {
+            marker: {
+                radius: 2
+            },
+            lineWidth: 2,
+            states: {
+                hover: {
+                    lineWidth: 2
+                }
+            },
+            threshold: null
+        },
+        series: {
+            fillColor: 'rgba(246,216,137,0.4)'
+        }
+    },
+
+    series: [{
+        type: 'area',
+        name: 'Value',
+        data: graph_data['data'],
+        color: 'rgba(244,208,111,1.0)'
+    }],
+  });
 }

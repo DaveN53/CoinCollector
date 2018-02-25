@@ -1,4 +1,99 @@
+body {
+    background-color: #F7F8F5;
+}
+
 canvas{
   width:1000px !important;
   height:450px !important;
+}
+
+.whiznav {
+    overflow: hidden;
+    background-color: #413c58;
+    font-weight: 900;
+}
+
+.whiznav img {
+    float: left;
+    padding: 0px 10px;
+    display: block;
+}
+
+.whiznav a {
+    pointer-events: none;
+    cursor: default;
+    float: left;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 16px 5px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+.whiznav input[type=text] {
+    padding: 6px;
+    border: none;
+    margin-top: 8px;
+    margin-right: 16px;
+    font-size: 17px;
+}
+
+.whiznav .search-container {
+  float: right;
+}
+
+.whiznav .search-container button {
+  float: right;
+  padding: 6px 10px;
+  margin-top: 8px;
+  margin-right: 16px;
+  background: #ddd;
+  font-size: 17px;
+  border: none;
+  cursor: pointer;
+}
+
+.whiznav .search-container button:hover {
+  background: #ccc;
+}
+
+
+.row {
+    float: left;
+    width: 100%;
+}
+
+.section {
+    background: #F7F8F5;
+    border-style: inset;
+    float: left;
+    margin-right: 5px;
+}
+
+.btn-primary {
+    background-color: #9DD9D2;
+    border: 0 none;
+    border-radius: 0;
+}
+
+.btn-primary:hover {
+    background-color: #3CBAAE;
+}
+
+.btn-secondary {
+    background-color: #BA706F;
+    color: #EEE;
+    border: 0 none;
+    border-radius: 0;
+}
+
+.btn-secondary:hover {
+    background-color: #A64746;
+    color: #EEE;
+}
+
+#linehighchart {
+    height: 450px;
+    width: 1000px;
 }
