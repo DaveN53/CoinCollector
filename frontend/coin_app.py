@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request, session, redirect
 from core.database.config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -14,8 +14,8 @@ app.config.from_object(Config)
 coin_db = SQLAlchemy(app)
 migrate = Migrate(app, coin_db)
 binance_trader = None
-api_key = 'Xwme4vyRvhCSRZzJDpqgzTllB2WyrfKG5hpeHEXRjQ4XEg9iOK41tJxiQlIgsRfI'
-api_secret = 'JofglM7AOlroYhca0sFIHX6KsTqTuIs6S27w7EBr97DpWTV6VWReOO0AfzW180I5'
+api_key = ''
+api_secret = ''
 binance_trader = BinanceTrader(api_key=api_key, api_secret=api_secret)
 db_help = DBHelper()
 
@@ -54,8 +54,19 @@ def get_buy_rate(symbol=None):
     return jsonify(data)
 
 
+@app.route('/bid', methods=['POST', 'GET'])
+def bid():
+    bid_price = request.form['bid_price']
+    print(bid_price)
+    return redirect('/')
+
+
 @app.route('/graph')
 def graph_data():
+    """
+    Runs once when page is loaded to create graph
+    :return:
+    """
     symbol = 'BNB'
     market_coin_symbol = 'ETH'
     graph_data = query_coin_db(symbol, market_coin_symbol)
@@ -72,6 +83,10 @@ def graph_data():
 
 @app.route('/update')
 def update():
+    """
+    Runs every minute to update price data
+    :return:
+    """
     global coin_db
     data = {}
     if binance_trader is not None:
@@ -83,6 +98,13 @@ def update():
 
 
 def update_binance(symbol, market_coin_symbol):
+    """
+    Get latest coin value
+    Graph coin data
+    :param symbol:
+    :param market_coin_symbol:
+    :return:
+    """
     global binance_trader, db_help
     value = binance_trader.get_last_bid(symbol)
     commit_coin_value(value, symbol, market_coin_symbol)
@@ -96,6 +118,13 @@ def update_binance(symbol, market_coin_symbol):
 
 
 def commit_coin_value(value, symbol, market_coin_symbol):
+    """
+    Save coin value to database
+    :param value:
+    :param symbol:
+    :param market_coin_symbol:
+    :return:
+    """
     coin = Coin(
         coin_symbol=symbol,
         market_coin_symbol=market_coin_symbol,
@@ -107,6 +136,12 @@ def commit_coin_value(value, symbol, market_coin_symbol):
 
 
 def query_coin_db(symbol, market_coin_symbol):
+    """
+    Query database for all coin data
+    :param symbol:
+    :param market_coin_symbol:
+    :return:
+    """
     delete_old_coin()
     coin_data = Coin.query.filter_by(coin_symbol=symbol).all()
     graph_data = db_help.retrieve_graph_data_for_time_period(coin_data=coin_data)
@@ -115,6 +150,10 @@ def query_coin_db(symbol, market_coin_symbol):
 
 
 def delete_old_coin():
+    """
+    Delete old data from database
+    :return:
+    """
     delete_time = db_help.get_delete_time(time_period_hours=6)
     coin_data = Coin.query.all()
     for coin in coin_data:

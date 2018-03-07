@@ -14,8 +14,6 @@
     </head>
     <body>
         <div class="whiznav">
-            <!--<img height='50px' src="{{ url_for('static',filename='wizard.svg') }}" alt="">-->
-
             <a>Coin Collector</a>
             <div class="search-container">
                 <form action='/Search' method="post">
@@ -26,8 +24,14 @@
         </div>
         <div class="row"></div>
             <div class="section">
-                <button type="button" class="btn btn-primary" title="Order for the price you would like to buy at">Create Bid</button>
-                <button type="button" class="btn btn-secondary" title="Order for the price you would like to sell at">Create Ask</button>
+                <form action='/bid' method="post">
+                    <input type="text" placeholder="0.0" name="bid_price">
+                    <button type="submit" class="btn btn-primary" title="Order for the price you would like to buy at">Create Bid</button>
+                </form>
+                <form action='/ask' method="post">
+                    <input type="text" placeholder="0.0" name="ask_price">
+                    <button type="submit" class="btn btn-secondary" title="Order for the price you would like to sell at">Create Ask</button>
+                </form>
                 <div id="time_div">{{ time }} </div>
                 <div id="eth_price"></div>
             </div>

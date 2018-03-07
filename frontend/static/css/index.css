@@ -97,3 +97,7 @@ canvas{
     height: 450px;
     width: 1000px;
 }
+
+#eth_price {
+    font-weight: bold;
+}
