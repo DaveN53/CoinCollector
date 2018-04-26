@@ -1,7 +1,6 @@
 $.get('/graph', updateCallback)
 
-update_time = 60 * 1000
-setTimeout(poll, update_time);
+update_time = 5 * 1000
 
 function poll(){
  $.get('/update', updateCallback);

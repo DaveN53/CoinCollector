@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from flask import render_template
 import time
 from core.binance.binance_trader import BinanceTrader
+from core.coin_trader import CoinTrader
 from core.database.db_helper import DBHelper
 
 
@@ -13,10 +14,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 coin_db = SQLAlchemy(app)
 migrate = Migrate(app, coin_db)
-binance_trader = None
-api_key = ''
-api_secret = ''
-binance_trader = BinanceTrader(api_key=api_key, api_secret=api_secret)
+exchange_trader = CoinTrader()
 db_help = DBHelper()
 
 
@@ -67,8 +65,8 @@ def graph_data():
     Runs once when page is loaded to create graph
     :return:
     """
-    symbol = 'BNB'
-    market_coin_symbol = 'ETH'
+    symbol = 'ETH'
+    market_coin_symbol = 'USD'
     graph_data = query_coin_db(symbol, market_coin_symbol)
 
     value = 0
@@ -89,27 +87,23 @@ def update():
     """
     global coin_db
     data = {}
-    if binance_trader is not None:
-        symbol = 'BNB'
-        market_coin_symbol = 'ETH'
-        data = update_binance(symbol, market_coin_symbol)
+    if exchange_trader is not None:
+        data = update_coin_data('ETH', 'USD')
+        result = exchange_trader.make_decision()
 
     return jsonify(data)
 
 
-def update_binance(symbol, market_coin_symbol):
+def update_coin_data(coin_symbol, market_symbol):
     """
-    Get latest coin value
-    Graph coin data
-    :param symbol:
-    :param market_coin_symbol:
+    :param coin_symbol: Coin you're interested
+    :param market_symbol: symbol to represent value. USD, GDP, BTC
     :return:
     """
-    global binance_trader, db_help
-    value = binance_trader.get_last_bid(symbol)
-    commit_coin_value(value, symbol, market_coin_symbol)
-    graph_data = query_coin_db(symbol, market_coin_symbol)
-
+    global exchange_trader, db_help
+    value = exchange_trader.price
+    commit_coin_value(value, coin_symbol, market_symbol)
+    graph_data = query_coin_db(coin_symbol, market_symbol)
     data = {
         'value': value,
         'graph_data': graph_data
