@@ -9,6 +9,11 @@ REST_URL = 'https://api.gdax.com'
 class Products:
     ETH_USD = 'ETH_USD'
 
+class OrderBook:
+    PRICE = 0
+    SIZE = 1
+    NUM_ORDERS = 2
+
 
 class GDAXTrader(FeedBase):
 

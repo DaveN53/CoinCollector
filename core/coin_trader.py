@@ -1,5 +1,5 @@
 from core.binance.binance_trader import BinanceTrader
-from core.GDAX.gdax_trader import GDAXTrader
+from core.GDAX.gdax_trader import GDAXTrader, OrderBook
 
 
 class Exchange:
@@ -61,9 +61,9 @@ class CoinTrader:
             self.exchange_trader.last_sold = current_price
 
         if self.is_buy_conditions(current_price, last_sell):
+            return True
 
-
-        return
+        return True
 
     def make_sell_decision(self):
         """
@@ -103,4 +103,32 @@ class CoinTrader:
         return percent_change > threshold
 
     def order_book_sell_dominant(self):
-        self.exchange_trader.order_book
+        order_book = self.exchange_trader.order_book
+        bid_info, ask_info = self.get_average_bid_ask(order_book)
+        return ask_info['count'] > bid_info['count']
+
+    def get_average_bid_ask(self, order_book: dict):
+        bids = order_book['bids']
+        asks = order_book['asks']
+        bid_info = {
+            'count': 0,
+            'average_price': 0
+        }
+        ask_info = {
+            'count': 0,
+            'average_price': 0
+        }
+        for bid in bids:
+            bid_info['count'] += bid[OrderBook.SIZE]
+            bid_info['average_price'] += bid[OrderBook.PRICE]
+
+        for ask in asks:
+            ask_info['count'] += ask[OrderBook.SIZE]
+            ask_info['average_price'] += ask[OrderBook.PRICE]
+
+        bid_info['average_price'] = bid_info['average_price'] / bid_info['count']
+        ask_info['average_price'] = ask_info['average_price'] / ask_info['count']
+
+        return bid_info, ask_info
+
+
