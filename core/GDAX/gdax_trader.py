@@ -1,24 +1,19 @@
 import requests
 import logging
-from core.feed_base import *
+from core.enums import Currencies, OrderAction
 
 TEST_REST_URL = 'https://api-public.sandbox.gdax.com'
 REST_URL = 'https://api.gdax.com'
 
 
-class Products:
-    ETH_USD = 'ETH_USD'
+class GDAXTrader():
 
-class OrderBook:
-    PRICE = 0
-    SIZE = 1
-    NUM_ORDERS = 2
-
-
-class GDAXTrader(FeedBase):
-
-    def __init__(self, coin=ETH, curr=USD, last_sold: int = 0, last_buy: int = 0):
-        self.url = TEST_REST_URL
+    def __init__(self,
+                 coin: Currencies=Currencies.ETH,
+                 curr: Currencies=Currencies.USD,
+                 last_sold: int = 0,
+                 last_buy: int = 0):
+        self.url = REST_URL
         self.coin = coin
         self.curr = curr
         self.last_sold = last_sold
@@ -30,6 +25,22 @@ class GDAXTrader(FeedBase):
         if r.ok:
             return r.json()
         raise QueryException("Status Code: {}".format(r.status_code))
+
+    def create_limit_order(self, current_price: float, action: OrderAction):
+
+        return
+
+    def create_stop_limit_order(self, current_price: float, action: OrderAction):
+        """
+        Stop is when the order is placed with the value of limit
+        :param current_price:
+        :param action:
+        :return:
+        """
+        limit = 0
+        stop = 0
+        return
+
 
     def get_available_coins(self):
         return self.query_api('/products')
@@ -46,7 +57,6 @@ class GDAXTrader(FeedBase):
             params={'level': 2}
         )
         return response
-
 
     @property
     def ticker(self):
@@ -65,7 +75,7 @@ class GDAXTrader(FeedBase):
 
     @property
     def price(self):
-        return self.ticker['price']
+        return float(self.ticker['price'])
 
     @property
     def last(self):
