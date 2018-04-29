@@ -1,8 +1,5 @@
 from abc import ABCMeta
 
-ETH='ETH'
-BTC='BTC'
-USD='USD'
 
 
 class FeedBase(object):

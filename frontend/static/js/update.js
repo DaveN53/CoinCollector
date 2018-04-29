@@ -1,17 +1,17 @@
 $.get('/graph', updateCallback)
 
-update_time = 5 * 1000
+update_time = 60 * 1000
 
 function poll(){
  $.get('/update', updateCallback);
 }
 
-graph_data = { 'labels' : [], 'data': []}
+graph_data = { 'label' : [], 'graph_data': []}
 
 function updateCallback(data, textStatus){
   $('#time_div').html(data); // just replace a chunk of text with the new text
   $('#eth_price').html(data['value']);
-  graph_data = data['graph_data']
+  graph_data = data
   renderGraph()
   setTimeout(poll, update_time);
 }
@@ -61,9 +61,20 @@ function renderGraph(){
 
     series: [{
         type: 'area',
-        name: 'Value',
-        data: graph_data['data'],
+        name: 'Price',
+        data: graph_data['graph_data']['data'],
         color: 'rgba(244,208,111,1.0)'
-    }],
+        },
+        {
+        name: 'EMA12',
+        data: graph_data['ema12'],
+        color: 'rgba(218,63,16,1.0)'
+        },
+        {
+        name: 'EMA26',
+        data: graph_data['ema26'],
+        color: 'rgba(16,140,218,1.0)'
+        }
+      ]
   });
 }

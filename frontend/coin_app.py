@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask import render_template
 import time
-from core.binance.binance_trader import BinanceTrader
+from core.trend_helper import TrendHelper
 from core.coin_trader import CoinTrader
 from core.database.db_helper import DBHelper
 
@@ -29,6 +29,17 @@ class Coin(coin_db.Model):
     def __repr__(self):
         return '<Coin {}>'.format(self.symbol)
 
+
+class EMA(coin_db.Model):
+    id = coin_db.Column(coin_db.Integer, primary_key=True)
+    coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
+    market_coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
+    value_twelve = coin_db.Column(coin_db.Float, index=True, unique=False)
+    value_twenty_six = coin_db.Column(coin_db.Float, index=True, unique=False)
+    date = coin_db.Column(coin_db.Float, index=True, unique=False)
+
+    def __repr__(self):
+        return '<EMA12 {}>'.format(self.symbol)
 
 coin_db.create_all()
 
@@ -69,12 +80,13 @@ def graph_data():
     market_coin_symbol = 'USD'
     graph_data = query_coin_db(symbol, market_coin_symbol)
 
-    value = 0
-    if graph_data['data']:
-        value = graph_data['data'][len(graph_data['data'])-1][1]
+    value = exchange_trader.price
     data = {
         'value': value,
-        'graph_data': graph_data
+        'graph_data': graph_data['price'],
+        'ema12': graph_data['ema12'],
+        'ema26': graph_data['ema26'],
+        'label': graph_data['label']
     }
     return jsonify(data)
 
@@ -89,7 +101,7 @@ def update():
     data = {}
     if exchange_trader is not None:
         data = update_coin_data('ETH', 'USD')
-        result = exchange_trader.make_decision()
+        # result = exchange_trader.make_decision()
 
     return jsonify(data)
 
@@ -101,17 +113,31 @@ def update_coin_data(coin_symbol, market_symbol):
     :return:
     """
     global exchange_trader, db_help
+    timestamp = str(time.time())
     value = exchange_trader.price
-    commit_coin_value(value, coin_symbol, market_symbol)
+    commit_coin_value(value, coin_symbol, market_symbol, timestamp)
     graph_data = query_coin_db(coin_symbol, market_symbol)
+    try:
+        price_data = []
+        for data in graph_data['price']['data']:
+            price_data.append(data[1])
+
+        ema12 = TrendHelper.calculate_exponential_moving_average(price_data, 12.0)
+        ema26 = TrendHelper.calculate_exponential_moving_average(price_data, 26.0)
+        commit_ema(ema12, ema26, coin_symbol, market_symbol, timestamp)
+    except ValueError:
+        pass
     data = {
         'value': value,
-        'graph_data': graph_data
+        'graph_data': graph_data['price'],
+        'ema12': graph_data['ema12'],
+        'ema26': graph_data['ema26'],
+        'label': graph_data['label']
     }
     return data
 
 
-def commit_coin_value(value, symbol, market_coin_symbol):
+def commit_coin_value(value, symbol, market_coin_symbol, timestamp):
     """
     Save coin value to database
     :param value:
@@ -123,9 +149,30 @@ def commit_coin_value(value, symbol, market_coin_symbol):
         coin_symbol=symbol,
         market_coin_symbol=market_coin_symbol,
         value_market=value,
-        date=str(time.time())
+        date=timestamp
     )
     coin_db.session.add(coin)
+    coin_db.session.commit()
+
+
+def commit_ema(value1: float, value2: float, symbol, market_coin_symbol, timestamp):
+    """
+
+    :param value1:  EMA12
+    :param value2:  EMA26
+    :param symbol:
+    :param market_coin_symbol:
+    :param timestamp:
+    :return:
+    """
+    ema = EMA(
+        coin_symbol=symbol,
+        market_coin_symbol=market_coin_symbol,
+        value_twelve=value1,
+        value_twenty_six=value2,
+        date=timestamp
+    )
+    coin_db.session.add(ema)
     coin_db.session.commit()
 
 
@@ -138,9 +185,18 @@ def query_coin_db(symbol, market_coin_symbol):
     """
     delete_old_coin()
     coin_data = Coin.query.filter_by(coin_symbol=symbol).all()
-    graph_data = db_help.retrieve_graph_data_for_time_period(coin_data=coin_data)
-    graph_data['label'] = "{}/{}".format(symbol, market_coin_symbol)
-    return graph_data
+    query_graph_data = {
+        'price': db_help.retrieve_graph_data_for_time_period(coin_data=coin_data),
+        'label': "{}/{}".format(symbol, market_coin_symbol),
+        'ema12': [],
+        'ema26': []
+    }
+    ema_data = EMA.query.filter_by(coin_symbol=symbol).all()
+    for ema in ema_data:
+        query_graph_data['ema12'].append([ema.date * 1000, ema.value_twelve])
+        query_graph_data['ema26'].append([ema.date * 1000, ema.value_twenty_six])
+
+    return query_graph_data
 
 
 def delete_old_coin():
@@ -148,11 +204,17 @@ def delete_old_coin():
     Delete old data from database
     :return:
     """
-    delete_time = db_help.get_delete_time(time_period_hours=6)
+    delete_time = db_help.get_delete_time(time_period_hours=12)
     coin_data = Coin.query.all()
     for coin in coin_data:
         if coin.date < delete_time:
             coin_db.session.delete(coin)
+
+    ema_data = EMA.query.all()
+    for ema in ema_data:
+        if ema.date < delete_time:
+            coin_db.session.delete(ema)
+
     coin_db.session.commit()
 
 

@@ -1,5 +1,6 @@
 from core.binance.binance_trader import BinanceTrader
-from core.GDAX.gdax_trader import GDAXTrader, OrderBook
+from core.GDAX.gdax_trader import GDAXTrader
+from core.enums import OrderBook, OrderAction
 
 
 class Exchange:
@@ -16,6 +17,7 @@ class CoinTrader:
         self.selling = not buying
         self.buying = buying
         self.setup_exchange()
+        self.current_price = self.exchange_trader.price
 
     def setup_exchange(self):
         if self.exchange is Exchange.GDAX:
@@ -27,7 +29,8 @@ class CoinTrader:
 
     @property
     def price(self):
-        return self.exchange_trader.price
+        self.current_price =  self.exchange_trader.price
+        return self.current_price
 
     def make_decision(self):
         """
@@ -55,13 +58,12 @@ class CoinTrader:
         if self.selling:
             return False
 
-        current_price = self.price
         last_sell = self.exchange_trader.last_sold_price
         if last_sell is 0:
-            self.exchange_trader.last_sold = current_price
+            self.exchange_trader.last_sold = self.current_price
 
-        if self.is_buy_conditions(current_price, last_sell):
-            return True
+        if self.is_buy_condition(self.current_price, last_sell):
+            stop_price, limit_price = self.exchange_trader.create_stop_limit_order(self.current_price, OrderAction.BUY)
 
         return True
 
@@ -76,7 +78,7 @@ class CoinTrader:
         if self.buying:
             return False
 
-    def is_buy_condition(self, current_price: int, last_sell: int):
+    def is_buy_condition(self, current_price: float, last_sell: float):
         # Is the current price less than what we sold at
         if current_price > last_sell:
             return False
@@ -90,7 +92,7 @@ class CoinTrader:
 
         return True
 
-    def change_in_price_exceeds_threshold(self, current: int, last: int, threshold: float):
+    def change_in_price_exceeds_threshold(self, current: float, last: float, threshold: float):
         """
 
         :param current:
@@ -130,5 +132,4 @@ class CoinTrader:
         ask_info['average_price'] = ask_info['average_price'] / ask_info['count']
 
         return bid_info, ask_info
-
 
