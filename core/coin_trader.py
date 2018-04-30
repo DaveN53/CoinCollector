@@ -32,6 +32,10 @@ class CoinTrader:
         self.current_price =  self.exchange_trader.price
         return self.current_price
 
+    @property
+    def candles(self):
+        return self.exchange_trader.get_candles()
+
     def make_decision(self):
         """
         :return: result of decision

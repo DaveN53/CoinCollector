@@ -41,7 +41,6 @@ class GDAXTrader():
         stop = 0
         return
 
-
     def get_available_coins(self):
         return self.query_api('/products')
 
@@ -49,6 +48,16 @@ class GDAXTrader():
         if not self.coin_info:
             self.coin_info = self.query_api('/products/{}-{}'.format(self.coin, self.curr))
         return self.coin_info
+
+    def get_candles(self):
+        """
+        [
+            [ time, low, high, open, close, volume ],
+            [ 1415398768, 0.32, 4.2, 0.35, 4.2, 12.3 ]
+        ]
+        :return:
+        """
+        return self.query_api('/products/{}-{}/candles?granularity=60'.format(self.coin, self.curr))
 
     @property
     def order_book(self):

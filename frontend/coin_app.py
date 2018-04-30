@@ -78,8 +78,14 @@ def graph_data():
     """
     symbol = 'ETH'
     market_coin_symbol = 'USD'
+    delete_old_coin()
     graph_data = query_coin_db(symbol, market_coin_symbol)
-
+    if not graph_data['price']['data']:
+        candles = exchange_trader.candles
+        for idx, candle in enumerate(reversed(candles)):
+            commit_coin_value(candle[4], symbol, market_coin_symbol, candle[0], commit=False)
+        coin_db.session.commit()
+    graph_data = query_coin_db(symbol, market_coin_symbol)
     value = exchange_trader.price
     data = {
         'value': value,
@@ -137,12 +143,14 @@ def update_coin_data(coin_symbol, market_symbol):
     return data
 
 
-def commit_coin_value(value, symbol, market_coin_symbol, timestamp):
+def commit_coin_value(value, symbol, market_coin_symbol, timestamp, commit: bool = True):
     """
     Save coin value to database
     :param value:
     :param symbol:
     :param market_coin_symbol:
+    :param timestamp
+    :param commit
     :return:
     """
     coin = Coin(
@@ -152,7 +160,8 @@ def commit_coin_value(value, symbol, market_coin_symbol, timestamp):
         date=timestamp
     )
     coin_db.session.add(coin)
-    coin_db.session.commit()
+    if commit:
+        coin_db.session.commit()
 
 
 def commit_ema(value1: float, value2: float, symbol, market_coin_symbol, timestamp):
