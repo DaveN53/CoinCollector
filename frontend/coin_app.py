@@ -34,8 +34,10 @@ class EMA(coin_db.Model):
     id = coin_db.Column(coin_db.Integer, primary_key=True)
     coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
     market_coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
+    value_five = coin_db.Column(coin_db.Float, index=True, unique=False)
     value_twelve = coin_db.Column(coin_db.Float, index=True, unique=False)
     value_twenty_six = coin_db.Column(coin_db.Float, index=True, unique=False)
+    value_fifty = coin_db.Column(coin_db.Float, index=True, unique=False)
     date = coin_db.Column(coin_db.Float, index=True, unique=False)
 
     def __repr__(self):
@@ -82,7 +84,18 @@ def graph_data():
     graph_data = query_coin_db(symbol, market_coin_symbol)
     if not graph_data['price']['data']:
         candles = exchange_trader.candles
+        price_data = []
+        for candle in reversed(candles):
+            price_data.append(candle[4])
         for idx, candle in enumerate(reversed(candles)):
+            try:
+                ema5 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 5.0)
+                ema12 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 12.0)
+                ema26 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 26.0)
+                ema50 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 50.0)
+                commit_ema([ema5, ema12, ema26, ema50], symbol, market_coin_symbol, candle[0], commit=False)
+            except ValueError:
+                pass
             commit_coin_value(candle[4], symbol, market_coin_symbol, candle[0], commit=False)
         coin_db.session.commit()
     graph_data = query_coin_db(symbol, market_coin_symbol)
@@ -90,8 +103,10 @@ def graph_data():
     data = {
         'value': value,
         'graph_data': graph_data['price'],
+        'ema5': graph_data['ema5'],
         'ema12': graph_data['ema12'],
         'ema26': graph_data['ema26'],
+        'ema50': graph_data['ema50'],
         'label': graph_data['label']
     }
     return jsonify(data)
@@ -128,17 +143,21 @@ def update_coin_data(coin_symbol, market_symbol):
         for data in graph_data['price']['data']:
             price_data.append(data[1])
 
+        ema5 = TrendHelper.calculate_exponential_moving_average(price_data, 5.0)
         ema12 = TrendHelper.calculate_exponential_moving_average(price_data, 12.0)
         ema26 = TrendHelper.calculate_exponential_moving_average(price_data, 26.0)
-        commit_ema(ema12, ema26, coin_symbol, market_symbol, timestamp)
+        ema50 = TrendHelper.calculate_exponential_moving_average(price_data, 50.0)
+        commit_ema([ema5, ema12, ema26, ema50], coin_symbol, market_symbol, timestamp)
     except ValueError:
         pass
     data = {
         'value': value,
         'graph_data': graph_data['price'],
+        'ema5': graph_data['ema5'],
         'ema12': graph_data['ema12'],
         'ema26': graph_data['ema26'],
-        'label': graph_data['label']
+        'ema50': graph_data['ema50'],
+        'label': graph_data['label'],
     }
     return data
 
@@ -164,11 +183,10 @@ def commit_coin_value(value, symbol, market_coin_symbol, timestamp, commit: bool
         coin_db.session.commit()
 
 
-def commit_ema(value1: float, value2: float, symbol, market_coin_symbol, timestamp):
+def commit_ema(ema_values: [], symbol, market_coin_symbol, timestamp, commit: bool = True):
     """
 
-    :param value1:  EMA12
-    :param value2:  EMA26
+    :param ema_values:
     :param symbol:
     :param market_coin_symbol:
     :param timestamp:
@@ -177,8 +195,10 @@ def commit_ema(value1: float, value2: float, symbol, market_coin_symbol, timesta
     ema = EMA(
         coin_symbol=symbol,
         market_coin_symbol=market_coin_symbol,
-        value_twelve=value1,
-        value_twenty_six=value2,
+        value_five=ema_values[0],
+        value_twelve=ema_values[1],
+        value_twenty_six=ema_values[2],
+        value_fifty=ema_values[3],
         date=timestamp
     )
     coin_db.session.add(ema)
@@ -197,13 +217,17 @@ def query_coin_db(symbol, market_coin_symbol):
     query_graph_data = {
         'price': db_help.retrieve_graph_data_for_time_period(coin_data=coin_data),
         'label': "{}/{}".format(symbol, market_coin_symbol),
+        'ema5': [],
         'ema12': [],
-        'ema26': []
+        'ema26': [],
+        'ema50': []
     }
     ema_data = EMA.query.filter_by(coin_symbol=symbol).all()
     for ema in ema_data:
+        query_graph_data['ema5'].append([ema.date * 1000, ema.value_five])
         query_graph_data['ema12'].append([ema.date * 1000, ema.value_twelve])
         query_graph_data['ema26'].append([ema.date * 1000, ema.value_twenty_six])
+        query_graph_data['ema50'].append([ema.date * 1000, ema.value_fifty])
 
     return query_graph_data
 

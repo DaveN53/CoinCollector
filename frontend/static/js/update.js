@@ -2,6 +2,12 @@ $.get('/graph', updateCallback)
 
 update_time = 60 * 1000
 
+Highcharts.setOptions({
+        global: {
+            useUTC: false
+        }
+    });
+
 function poll(){
  $.get('/update', updateCallback);
 }
@@ -66,6 +72,11 @@ function renderGraph(){
         color: 'rgba(244,208,111,1.0)'
         },
         {
+        name: 'EMA5',
+        data: graph_data['ema5'],
+        color: 'rgba(0,153,51,1.0)'
+        },
+        {
         name: 'EMA12',
         data: graph_data['ema12'],
         color: 'rgba(218,63,16,1.0)'
@@ -74,6 +85,11 @@ function renderGraph(){
         name: 'EMA26',
         data: graph_data['ema26'],
         color: 'rgba(16,140,218,1.0)'
+        },
+        {
+        name: 'EMA50',
+        data: graph_data['ema50'],
+        color: 'rgba(77,0,77,1.0)'
         }
       ]
   });
