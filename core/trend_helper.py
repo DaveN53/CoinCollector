@@ -1,7 +1,28 @@
 
+class EMATrend:
+    # EMA5 Less than other EMA
+    BEAR = 1
+    # EMA5 Greater than EMA26
+    PARTIAL_BEAR = 2
+    # EMA5 Greater than EMA26 and EMA50
+    PARTIAL_BULL = 3
+    # EMA5 Greater than other EMA
+    BULL = 4
+
 class TrendHelper:
+
     @staticmethod
-    def calculate_simple_moving_average( candle_data: {}, period: float):
+    def ema_snapshot(price_data: []):
+
+        return {
+            'EMA5': TrendHelper.calculate_exponential_moving_average(price_data, 5.0),
+            'EMA12': TrendHelper.calculate_exponential_moving_average(price_data, 12.0),
+            'EMA26': TrendHelper.calculate_exponential_moving_average(price_data, 26.0),
+            'EMA50': TrendHelper.calculate_exponential_moving_average(price_data, 50.0)
+        }
+
+    @staticmethod
+    def calculate_simple_moving_average(candle_data: [], period: float):
         """
         calculate sma for the last point
         :param candle_data:

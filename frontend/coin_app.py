@@ -1,50 +1,19 @@
 from flask import Flask, jsonify, request, session, redirect
 from core.database.config import Config
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask import render_template
 import time
 from core.trend_helper import TrendHelper
 from core.coin_trader import CoinTrader
 from core.database.db_helper import DBHelper
-
+from core.database.db_manager import coin_db
 
 
 app = Flask(__name__)
 app.config.from_object(Config)
-coin_db = SQLAlchemy(app)
 migrate = Migrate(app, coin_db)
 exchange_trader = CoinTrader()
 db_help = DBHelper()
-
-
-# DB setup
-class Coin(coin_db.Model):
-    id = coin_db.Column(coin_db.Integer, primary_key=True)
-    coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
-    market_coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
-    value_market = coin_db.Column(coin_db.Float, index=True, unique=False)
-    date = coin_db.Column(coin_db.Float, index=True, unique=False)
-
-    def __repr__(self):
-        return '<Coin {}>'.format(self.symbol)
-
-
-class EMA(coin_db.Model):
-    id = coin_db.Column(coin_db.Integer, primary_key=True)
-    coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
-    market_coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
-    value_five = coin_db.Column(coin_db.Float, index=True, unique=False)
-    value_twelve = coin_db.Column(coin_db.Float, index=True, unique=False)
-    value_twenty_six = coin_db.Column(coin_db.Float, index=True, unique=False)
-    value_fifty = coin_db.Column(coin_db.Float, index=True, unique=False)
-    date = coin_db.Column(coin_db.Float, index=True, unique=False)
-
-    def __repr__(self):
-        return '<EMA12 {}>'.format(self.symbol)
-
-coin_db.create_all()
-
 
 # API
 @app.route('/time')
@@ -80,25 +49,26 @@ def graph_data():
     """
     symbol = 'ETH'
     market_coin_symbol = 'USD'
-    delete_old_coin()
-    graph_data = query_coin_db(symbol, market_coin_symbol)
+    db_help.delete_old_coin()
+    graph_data = db_help.query_coin_db(symbol, market_coin_symbol)
     if not graph_data['price']['data']:
         candles = exchange_trader.candles
         price_data = []
-        for candle in reversed(candles):
-            price_data.append(candle[4])
         for idx, candle in enumerate(reversed(candles)):
+            price_data.append(candle[4])
             try:
-                ema5 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 5.0)
-                ema12 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 12.0)
-                ema26 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 26.0)
-                ema50 = TrendHelper.calculate_exponential_moving_average(price_data[:idx], 50.0)
-                commit_ema([ema5, ema12, ema26, ema50], symbol, market_coin_symbol, candle[0], commit=False)
+                ema_data = TrendHelper.ema_snapshot(price_data[:idx])
+                db_help.commit_ema(
+                    [ema_data['EMA5'], ema_data['EMA12'], ema_data['EMA26'], ema_data['EMA50']],
+                    symbol,
+                    market_coin_symbol,
+                    candle[0],
+                    commit=False)
             except ValueError:
                 pass
-            commit_coin_value(candle[4], symbol, market_coin_symbol, candle[0], commit=False)
+            db_help.commit_coin_value(candle[4], symbol, market_coin_symbol, candle[0], commit=False)
         coin_db.session.commit()
-    graph_data = query_coin_db(symbol, market_coin_symbol)
+    graph_data = db_help.query_coin_db(symbol, market_coin_symbol)
     value = exchange_trader.price
     data = {
         'value': value,
@@ -122,7 +92,7 @@ def update():
     data = {}
     if exchange_trader is not None:
         data = update_coin_data('ETH', 'USD')
-        # result = exchange_trader.make_decision()
+        # result = exchange_trader.make_decision(data)
 
     return jsonify(data)
 
@@ -136,20 +106,22 @@ def update_coin_data(coin_symbol, market_symbol):
     global exchange_trader, db_help
     timestamp = str(time.time())
     value = exchange_trader.price
-    commit_coin_value(value, coin_symbol, market_symbol, timestamp)
-    graph_data = query_coin_db(coin_symbol, market_symbol)
+    db_help.commit_coin_value(value, coin_symbol, market_symbol, timestamp)
+    graph_data = db_help.query_coin_db(coin_symbol, market_symbol)
     try:
         price_data = []
         for data in graph_data['price']['data']:
             price_data.append(data[1])
+        ema_data = TrendHelper.ema_snapshot(price_data)
+        db_help.commit_ema(
+            [ema_data['EMA5'], ema_data['EMA12'], ema_data['EMA26'], ema_data['EMA50']],
+            coin_symbol,
+            market_symbol,
+            timestamp)
 
-        ema5 = TrendHelper.calculate_exponential_moving_average(price_data, 5.0)
-        ema12 = TrendHelper.calculate_exponential_moving_average(price_data, 12.0)
-        ema26 = TrendHelper.calculate_exponential_moving_average(price_data, 26.0)
-        ema50 = TrendHelper.calculate_exponential_moving_average(price_data, 50.0)
-        commit_ema([ema5, ema12, ema26, ema50], coin_symbol, market_symbol, timestamp)
     except ValueError:
         pass
+    graph_data = db_help.query_coin_db(coin_symbol, market_symbol)
     data = {
         'value': value,
         'graph_data': graph_data['price'],
@@ -160,95 +132,6 @@ def update_coin_data(coin_symbol, market_symbol):
         'label': graph_data['label'],
     }
     return data
-
-
-def commit_coin_value(value, symbol, market_coin_symbol, timestamp, commit: bool = True):
-    """
-    Save coin value to database
-    :param value:
-    :param symbol:
-    :param market_coin_symbol:
-    :param timestamp
-    :param commit
-    :return:
-    """
-    coin = Coin(
-        coin_symbol=symbol,
-        market_coin_symbol=market_coin_symbol,
-        value_market=value,
-        date=timestamp
-    )
-    coin_db.session.add(coin)
-    if commit:
-        coin_db.session.commit()
-
-
-def commit_ema(ema_values: [], symbol, market_coin_symbol, timestamp, commit: bool = True):
-    """
-
-    :param ema_values:
-    :param symbol:
-    :param market_coin_symbol:
-    :param timestamp:
-    :return:
-    """
-    ema = EMA(
-        coin_symbol=symbol,
-        market_coin_symbol=market_coin_symbol,
-        value_five=ema_values[0],
-        value_twelve=ema_values[1],
-        value_twenty_six=ema_values[2],
-        value_fifty=ema_values[3],
-        date=timestamp
-    )
-    coin_db.session.add(ema)
-    coin_db.session.commit()
-
-
-def query_coin_db(symbol, market_coin_symbol):
-    """
-    Query database for all coin data
-    :param symbol:
-    :param market_coin_symbol:
-    :return:
-    """
-    delete_old_coin()
-    coin_data = Coin.query.filter_by(coin_symbol=symbol).all()
-    query_graph_data = {
-        'price': db_help.retrieve_graph_data_for_time_period(coin_data=coin_data),
-        'label': "{}/{}".format(symbol, market_coin_symbol),
-        'ema5': [],
-        'ema12': [],
-        'ema26': [],
-        'ema50': []
-    }
-    ema_data = EMA.query.filter_by(coin_symbol=symbol).all()
-    for ema in ema_data:
-        query_graph_data['ema5'].append([ema.date * 1000, ema.value_five])
-        query_graph_data['ema12'].append([ema.date * 1000, ema.value_twelve])
-        query_graph_data['ema26'].append([ema.date * 1000, ema.value_twenty_six])
-        query_graph_data['ema50'].append([ema.date * 1000, ema.value_fifty])
-
-    return query_graph_data
-
-
-def delete_old_coin():
-    """
-    Delete old data from database
-    :return:
-    """
-    delete_time = db_help.get_delete_time(time_period_hours=12)
-    coin_data = Coin.query.all()
-    for coin in coin_data:
-        if coin.date < delete_time:
-            coin_db.session.delete(coin)
-
-    ema_data = EMA.query.all()
-    for ema in ema_data:
-        if ema.date < delete_time:
-            coin_db.session.delete(ema)
-
-    coin_db.session.commit()
 
 
 @app.route('/database')
@@ -266,4 +149,6 @@ def index(data=''):
     user = {'username': 'David'}
     return render_template('index.html', title='CoinCollector', user=user, time=time.time())
 
+coin_db.init_app(app)
+coin_db.create_all(app=app)
 app.run()

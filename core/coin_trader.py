@@ -36,19 +36,29 @@ class CoinTrader:
     def candles(self):
         return self.exchange_trader.get_candles()
 
-    def make_decision(self):
+    def make_decision(self, trade_data: {}):
         """
+        :param trade_data:
+            data = {
+            'value': value, - current price
+            'graph_data': graph_data['price'], - all price data
+            'ema5': graph_data['ema5'], - all ema5 data
+            'ema12': graph_data['ema12'],
+            'ema26': graph_data['ema26'],
+            'ema50': graph_data['ema50'],
+            'label': graph_data['label'],
+        }
         :return: result of decision
         """
         result = None
         if self.selling:
-            result = self.make_sell_decision()
+            result = self.make_sell_decision(trade_data)
         elif self.buying:
-            result = self.make_buy_decision()
+            result = self.make_buy_decision(trade_data)
 
         return result
 
-    def make_buy_decision(self):
+    def make_buy_decision(self, trade_data: {}):
         """
         Check current price
         Check last buy limit / last sell
@@ -64,14 +74,14 @@ class CoinTrader:
 
         last_sell = self.exchange_trader.last_sold_price
         if last_sell is 0:
-            self.exchange_trader.last_sold = self.current_price
+            self.exchange_trader.last_sold = trade_data['value']
 
-        if self.is_buy_condition(self.current_price, last_sell):
+        if self.is_buy_condition(trade_data, last_sell):
             stop_price, limit_price = self.exchange_trader.create_stop_limit_order(self.current_price, OrderAction.BUY)
 
         return True
 
-    def make_sell_decision(self):
+    def make_sell_decision(self, trade_data: {}):
         """
         Check current price
         Check buy price
@@ -82,17 +92,25 @@ class CoinTrader:
         if self.buying:
             return False
 
-    def is_buy_condition(self, current_price: float, last_sell: float):
+        if trade_data['EMA5'] < trade_data['EMA26']:
+            return False
+
+        return True
+
+    def is_buy_condition(self, trade_data: {}, last_sell: float):
         # Is the current price less than what we sold at
-        if current_price > last_sell:
+        if trade_data['value'] > last_sell:
             return False
 
-        # Has the price changed greater than 1%
-        if not self.change_in_price_exceeds_threshold(current_price, last_sell, .001):
+        # Has the price changed greater than .1%
+        if not self.change_in_price_exceeds_threshold(trade_data['value'], last_sell, .001):
             return False
 
-        if self.order_book_sell_dominant():
+        if trade_data['EMA5'] > trade_data['EMA26']:
             return False
+
+        # if self.order_book_sell_dominant():
+        #    return False
 
         return True
 
