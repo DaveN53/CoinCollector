@@ -1,31 +1,31 @@
 import os
 
-from core.enums import OrderBook, OrderAction, Exchange
+from core.enums import OrderBook, OrderAction, ExchangeName
 from core.exchange.GDAX.gdax_trader import GDAXTrader
 from core.exchange.binance.binance_trader import BinanceTrader
+from core.exchange.exchange import Exchange
 
 
 class CoinTrader:
 
-    def __init__(self, exchange: Exchange = Exchange.GDAX):
-        self.exchange = exchange
-        self.exchange_trader = None
+    def __init__(self, exchange_name: ExchangeName = ExchangeName.GDAX):
+        self.exchange_name = exchange_name
+        self.exchange_trader = self.setup_exchange()
         self.selling = False
         self.buying = True
-        self.setup_exchange()
-        self.current_price = self.exchange_trader.price
+        self.current_price = self.exchange_trader.current_price
 
-    def setup_exchange(self):
-        if self.exchange is Exchange.GDAX:
-            self.exchange_trader = GDAXTrader()
-        elif self.exchange is Exchange.BINANCE:
-            self.exchange_trader = BinanceTrader(
+    def setup_exchange(self) -> Exchange:
+        if self.exchange_name is ExchangeName.GDAX:
+            return GDAXTrader()
+        elif self.exchange_name is ExchangeName.BINANCE:
+            return BinanceTrader(
                 api_key=os.environ.get('BINANCE_KEY'),
                 api_secret=os.environ.get('BINANCE_SECRET'))
 
     @property
     def price(self):
-        self.current_price = self.exchange_trader.price
+        self.current_price = self.exchange_trader.current_price
         return self.current_price
 
     @property
@@ -70,7 +70,7 @@ class CoinTrader:
 
         last_sell = self.exchange_trader.last_sold_price
         if last_sell is 0:
-            self.exchange_trader.last_sold = trade_data['value']
+            self.exchange_trader._last_sold = trade_data['value']
 
         if self.is_buy_condition(trade_data, last_sell):
             stop_price, limit_price = self.exchange_trader.create_stop_limit_order(self.current_price, OrderAction.BUY)

@@ -1,8 +1,10 @@
 import requests
 from binance.client import Client
 
+from core.exchange.exchange import Exchange
 
-class BinanceTrader:
+
+class BinanceTrader(Exchange):
 
     def __init__(self, api_key, api_secret, market_coin='ETH'):
         self.client = Client(api_key=api_key, api_secret=api_secret)

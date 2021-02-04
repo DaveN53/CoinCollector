@@ -22,6 +22,6 @@ class OrderAction:
     BUY = 'BUY'
 
 
-class Exchange:
+class ExchangeName:
     GDAX = 'GDAX'
     BINANCE = 'BINANCE'

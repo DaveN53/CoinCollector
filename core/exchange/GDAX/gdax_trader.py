@@ -11,14 +11,11 @@ class GDAXTrader(Exchange):
 
     def __init__(self,
                  coin: Currencies=Currencies.ETH,
-                 curr: Currencies=Currencies.USD,
-                 last_sold: int = 0,
-                 last_buy: int = 0):
+                 curr: Currencies=Currencies.USD):
+        super().__init__()
         self.url = REST_URL
         self.coin = coin
         self.curr = curr
-        self.last_sold = last_sold
-        self.last_buy = last_buy
         self.coin_info = None
 
     def query_api(self, path, params=None):
@@ -81,10 +78,10 @@ class GDAXTrader(Exchange):
 
     @property
     def last_sold_price(self):
-        return self.last_sold
+        return self._last_sold
 
     @property
-    def price(self):
+    def current_price(self):
         return float(self.ticker['price'])
 
     @property

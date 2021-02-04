@@ -42,7 +42,7 @@ def create_graph():
             db_help.commit_coin_value(candle[4], symbol, market_coin_symbol, candle[0], commit=False)
         coin_db.session.commit()
     graph_data = db_help.query_coin_db(symbol, market_coin_symbol)
-    value = exchange_trader.price
+    value = exchange_trader.current_price
     data = {
         'value': value,
         'graph_data': graph_data['price'],
@@ -76,7 +76,7 @@ def update_coin_data(coin_symbol, market_symbol):
     :return:
     """
     timestamp = str(time.time())
-    value = exchange_trader.price
+    value = exchange_trader.current_price
     db_help.commit_coin_value(value, coin_symbol, market_symbol, timestamp)
     graph_data = db_help.query_coin_db(coin_symbol, market_symbol)
     try:
