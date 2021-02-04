@@ -6,7 +6,7 @@ TEST_REST_URL = 'https://api-public.sandbox.gdax.com'
 REST_URL = 'https://api.gdax.com'
 
 
-class GDAXTrader():
+class GDAXTrader:
 
     def __init__(self,
                  coin: Currencies=Currencies.ETH,

@@ -1,7 +1,7 @@
-import os
-import pytest
 import logging
-from core.robinhood.robinhood_trader import *
+import os
+
+import pytest
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)

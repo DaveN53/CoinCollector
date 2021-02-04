@@ -15,7 +15,7 @@ function poll(){
 graph_data = { 'label' : [], 'graph_data': []}
 
 function updateCallback(data, textStatus){
-  $('#time_div').html(data); // just replace a chunk of text with the new text
+  $('#time_div').html(data['time']); // just replace a chunk of text with the new text
   $('#eth_price').html(data['value']);
   graph_data = data
   renderGraph()

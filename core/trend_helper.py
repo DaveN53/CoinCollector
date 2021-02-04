@@ -9,6 +9,7 @@ class EMATrend:
     # EMA5 Greater than other EMA
     BULL = 4
 
+
 class TrendHelper:
 
     @staticmethod

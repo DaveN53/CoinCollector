@@ -1,6 +1,8 @@
-from core.binance.binance_trader import BinanceTrader
-from core.GDAX.gdax_trader import GDAXTrader
+import os
+
 from core.enums import OrderBook, OrderAction
+from core.exchange.GDAX import GDAXTrader
+from core.exchange.binance import BinanceTrader
 
 
 class Exchange:
@@ -10,8 +12,7 @@ class Exchange:
 
 class CoinTrader:
 
-    def __init__(self, buying: bool = True, exchange: Exchange = Exchange.GDAX ):
-        self.gdax_trader = GDAXTrader()
+    def __init__(self, buying: bool = True, exchange: Exchange = Exchange.GDAX):
         self.exchange = exchange
         self.exchange_trader = None
         self.selling = not buying
@@ -23,9 +24,9 @@ class CoinTrader:
         if self.exchange is Exchange.GDAX:
             self.exchange_trader = GDAXTrader()
         elif self.exchange is Exchange.BINANCE:
-            self.binance_api_key = ''
-            self.binance_api_secret = ''
-            self.exchange_trader = BinanceTrader()
+            self.exchange_trader = BinanceTrader(
+                api_key=os.environ.get('BINANCE_KEY'),
+                api_secret=os.environ.get('BINANCE_SECRET'))
 
     @property
     def price(self):

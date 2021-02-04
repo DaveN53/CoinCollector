@@ -1,6 +1,6 @@
-import pytest
 import logging
-from core.GDAX.gdax_trader import *
+
+import pytest
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
