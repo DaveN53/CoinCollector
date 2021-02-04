@@ -20,3 +20,8 @@ class OrderBook:
 class OrderAction:
     SELL = 'SELL'
     BUY = 'BUY'
+
+
+class Exchange:
+    GDAX = 'GDAX'
+    BINANCE = 'BINANCE'

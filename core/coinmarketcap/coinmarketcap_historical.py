@@ -1,6 +1,7 @@
 import requests
 import json
 
+
 class CoinMarketCapHistorical:
 
     BASE_URL = 'https://graphs2.coinmarketcap.com/currencies/'

@@ -1,8 +1,9 @@
 from flask import Flask
+
 from core.database.config import Config
-from core.coin_trader import CoinTrader
 from core.database.db_helper import DBHelper
 from core.database.db_manager import coin_db
+from core.trade.coin_trader import CoinTrader
 
 app = Flask(__name__)
 app.config.from_object(Config)

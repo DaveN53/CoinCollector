@@ -1,12 +1,13 @@
 import requests
 import logging
 from core.enums import Currencies, OrderAction
+from core.exchange.exchange import Exchange
 
-TEST_REST_URL = 'https://api-public.sandbox.gdax.com'
+TEST_REST_URL = 'https://api-public.sandbox.pro.coinbase.com'
 REST_URL = 'https://api.gdax.com'
 
 
-class GDAXTrader:
+class GDAXTrader(Exchange):
 
     def __init__(self,
                  coin: Currencies=Currencies.ETH,

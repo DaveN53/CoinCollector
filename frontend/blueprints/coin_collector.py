@@ -1,6 +1,7 @@
 import time
 from flask import Blueprint, render_template, jsonify
 
+from core.database.db_manager import coin_db
 from core.trend_helper import TrendHelper
 from frontend import exchange_trader, db_help
 
@@ -60,7 +61,6 @@ def update():
     Runs every minute to update price data
     :return:
     """
-    global coin_db
     data = {}
     if exchange_trader is not None:
         data = update_coin_data('ETH', 'USD')
