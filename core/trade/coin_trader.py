@@ -13,7 +13,7 @@ class CoinTrader:
         self.exchange_trader = self.setup_exchange()
         self.selling = False
         self.buying = True
-        self.current_price = self.exchange_trader.current_price
+        # self.current_price = self.exchange_trader.current_price
 
     def setup_exchange(self) -> Exchange:
         if self.exchange_name is ExchangeName.GDAX:
@@ -23,10 +23,6 @@ class CoinTrader:
                 api_key=os.environ.get('BINANCE_KEY'),
                 api_secret=os.environ.get('BINANCE_SECRET'))
 
-    @property
-    def price(self):
-        self.current_price = self.exchange_trader.current_price
-        return self.current_price
 
     @property
     def candles(self):

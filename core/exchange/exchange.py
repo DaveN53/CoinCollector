@@ -8,10 +8,6 @@ class Exchange:
         self._last_buy = 0
 
     @property
-    def current_price(self):
-        raise NotImplementedError
-
-    @property
     def last_sold_price(self):
         return self._last_sold
 
@@ -19,8 +15,13 @@ class Exchange:
     def last_buy_price(self):
         return self._last_buy
 
-    def get_candles(self):
+    def get_candles(self, coin_symbol: str, market_symbol: str):
         raise NotImplementedError
 
-    def create_stop_limit_order(self, current_price: float, action: OrderAction):
-        pass
+    def get_latest_coin_data(self, coin_symbol: str, market_symbol: str):
+        """
+        :param coin_symbol: Symbol of coin we're buying
+        :param market_symbol: currency we're buying it in
+        :return:
+        """
+        raise NotImplementedError

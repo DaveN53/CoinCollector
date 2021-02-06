@@ -1,11 +1,17 @@
 import time
-from core.database.db_manager import coin_db, Coin, EMA
+
+from flask_sqlalchemy import SQLAlchemy
+
+from core.database.model import Coin, EMA
 
 HOUR = 3600
 NUM_LABELS = 12
 
 
 class DBHelper:
+
+    def __init__(self, db: SQLAlchemy):
+        self._coin_db = db
 
     @staticmethod
     def retrieve_graph_data_for_time_period(coin_data):
@@ -41,21 +47,41 @@ class DBHelper:
         Delete old data from database
         :return:
         """
-        delete_time = self.get_delete_time(time_period_hours=6)
+        delete_time = self.get_delete_time(time_period_hours=66)
         coin_data = Coin.query.all()
         for coin in coin_data:
             if coin.date < delete_time:
-                coin_db.session.delete(coin)
+                self._coin_db.session.delete(coin)
 
         ema_data = EMA.query.all()
         for ema in ema_data:
             if ema.date < delete_time:
-                coin_db.session.delete(ema)
+                self._coin_db.session.delete(ema)
 
-        coin_db.session.commit()
+        self._coin_db.session.commit()
 
-    @staticmethod
-    def commit_coin_value(value, symbol, market_coin_symbol, timestamp, commit: bool = True):
+    def commit(self):
+        self._coin_db.session.commit()
+
+    def add_coin_value(self, value, coin_symbol, market_symbol, timestamp):
+        """
+        Save coin value to database
+        :param value:
+        :param coin_symbol:
+        :param market_symbol:
+        :param timestamp
+        :param commit
+        :return:
+        """
+        coin = Coin(
+            coin_symbol=coin_symbol,
+            market_coin_symbol=market_symbol,
+            value_market=value,
+            date=timestamp
+        )
+        self._coin_db.session.add(coin)
+
+    def commit_coin_value(self, value, symbol, market_coin_symbol, timestamp, commit: bool = True):
         """
         Save coin value to database
         :param value:
@@ -71,12 +97,11 @@ class DBHelper:
             value_market=value,
             date=timestamp
         )
-        coin_db.session.add(coin)
+        self._coin_db.session.add(coin)
         if commit:
-            coin_db.session.commit()
+            self._coin_db.session.commit()
 
-    @staticmethod
-    def commit_ema(ema_values: [], symbol, market_coin_symbol, timestamp, commit: bool = True):
+    def commit_ema(self, ema_values: [], symbol, market_coin_symbol, timestamp, commit: bool = True):
         """
 
         :param ema_values:
@@ -95,9 +120,9 @@ class DBHelper:
             value_fifty=ema_values[3],
             date=timestamp
         )
-        coin_db.session.add(ema)
+        self._coin_db.session.add(ema)
         if commit:
-            coin_db.session.commit()
+            self._coin_db.session.commit()
 
     def query_coin_db(self, symbol, market_coin_symbol):
         """
@@ -107,7 +132,9 @@ class DBHelper:
         :return:
         """
         self.delete_old_coin()
-        coin_data = Coin.query.filter_by(coin_symbol=symbol).all()
+        coin_data = Coin.query.filter_by(coin_symbol=symbol, market_coin_symbol=market_coin_symbol
+                                         ).order_by(Coin.id.desc()).limit(300).all()
+        coin_data = list(reversed(coin_data))
         query_graph_data = {
             'price': self.retrieve_graph_data_for_time_period(coin_data=coin_data),
             'label': "{}/{}".format(symbol, market_coin_symbol),
@@ -116,7 +143,10 @@ class DBHelper:
             'ema26': [],
             'ema50': []
         }
-        ema_data = EMA.query.filter_by(coin_symbol=symbol).all()
+        ema_data = EMA.query.filter_by(coin_symbol=symbol, market_coin_symbol=market_coin_symbol
+                                       ).order_by(EMA.id.desc()).limit(300).all()
+        ema_data = list(reversed(ema_data))
+
         for ema in ema_data:
             query_graph_data['ema5'].append([ema.date * 1000, ema.value_five])
             query_graph_data['ema12'].append([ema.date * 1000, ema.value_twelve])

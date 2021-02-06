@@ -1,6 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-
-coin_db = SQLAlchemy()
+from frontend import coin_db
 
 
 class Coin(coin_db.Model):

@@ -1,4 +1,7 @@
-$.get('/graph', updateCallback)
+$.get('/graph', updateCallback);
+
+// TODO remove update call
+//$.get('/update', updateCallback);
 
 update_time = 60 * 1000
 

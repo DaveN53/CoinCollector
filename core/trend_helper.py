@@ -49,7 +49,8 @@ class TrendHelper:
         current_ema = TrendHelper.calculate_simple_moving_average(
             candle_data[-int(period) * 2:-int(period)], int(period)
         )
-        for value in candle_data[-int(period):]:
+        data_set = candle_data[-int(period):]
+        for value in data_set:
             current_ema = (c * value) + ((1 - c) * current_ema)
         return current_ema
 
