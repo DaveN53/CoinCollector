@@ -6,6 +6,7 @@ class Coin(coin_db.Model):
     coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
     market_coin_symbol = coin_db.Column(coin_db.String(64), index=True, unique=False)
     value_market = coin_db.Column(coin_db.Float, index=True, unique=False)
+    volume = coin_db.Column(coin_db.Float, index=True, unique=False)
     date = coin_db.Column(coin_db.Float, index=True, unique=False)
 
     def __repr__(self):

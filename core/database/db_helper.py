@@ -42,12 +42,12 @@ class DBHelper:
         delete_time = time_now - time_period_milli
         return delete_time
 
-    def delete_old_coin(self):
+    def delete_old_coin(self, time_period_hours: int = 6):
         """
         Delete old data from database
         :return:
         """
-        delete_time = self.get_delete_time(time_period_hours=66)
+        delete_time = self.get_delete_time(time_period_hours=time_period_hours)
         coin_data = Coin.query.all()
         for coin in coin_data:
             if coin.date < delete_time:
@@ -63,10 +63,11 @@ class DBHelper:
     def commit(self):
         self._coin_db.session.commit()
 
-    def add_coin_value(self, value, coin_symbol, market_symbol, timestamp):
+    def add_coin_value(self, value, volume, coin_symbol, market_symbol, timestamp):
         """
         Save coin value to database
         :param value:
+        :param volume
         :param coin_symbol:
         :param market_symbol:
         :param timestamp
@@ -77,14 +78,16 @@ class DBHelper:
             coin_symbol=coin_symbol,
             market_coin_symbol=market_symbol,
             value_market=value,
+            volume=volume,
             date=timestamp
         )
         self._coin_db.session.add(coin)
 
-    def commit_coin_value(self, value, symbol, market_coin_symbol, timestamp, commit: bool = True):
+    def commit_coin_value(self, value, volume, symbol, market_coin_symbol, timestamp, commit: bool = True):
         """
         Save coin value to database
         :param value:
+        :param volume
         :param symbol:
         :param market_coin_symbol:
         :param timestamp
@@ -95,6 +98,7 @@ class DBHelper:
             coin_symbol=symbol,
             market_coin_symbol=market_coin_symbol,
             value_market=value,
+            volume=volume,
             date=timestamp
         )
         self._coin_db.session.add(coin)

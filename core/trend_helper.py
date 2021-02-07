@@ -1,3 +1,7 @@
+from typing import Tuple
+
+import numpy as np
+
 
 class EMATrend:
     # EMA5 Less than other EMA
@@ -88,6 +92,30 @@ class TrendHelper:
             smma[i] = ((prev_sum - smma[i - 1]) + candle_data[i]['close']) / smoothing_period
 
         return smma
+
+    @staticmethod
+    def calculate_moving_average_convergence_divergence(ema_12: list, ema_26: list) -> Tuple[list, list]:
+        """
+        Calculates macd + macd ema 9
+        :param ema_12:
+        :param ema_26:
+        :return: Tuple (macd, macd ema 9)
+        """
+        ema_26_np = np.array(ema_26)
+        ema_12_np = np.array(ema_12)
+
+        macd_line = list(ema_12_np - ema_26_np)
+
+        macd_data = []
+        macd_ema_9 = []
+        for idx, data in enumerate(macd_line):
+            macd_data.append(data)
+            try:
+                macd_ema_9.append(TrendHelper.calculate_exponential_moving_average(macd_data[:idx], 9))
+            except ValueError:
+                pass
+
+        return macd_line, macd_ema_9
 
     @staticmethod
     def calculate_williams_alligator(candle_data: {}):
