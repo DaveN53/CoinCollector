@@ -1,18 +1,23 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 
 from core.database.config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
-coin_db = SQLAlchemy()
+
+DB_URL =  'sqlite:///app.db'
+engine = create_engine(
+    DB_URL
+)
+Base = declarative_base()
 
 from core.collector import Collector
 from core.database.db_helper import DBHelper
 from core.enums import Currencies
 
-coin_db.init_app(app)
-db_help = DBHelper(coin_db)
+db_help = DBHelper(engine)
 collector = Collector(db_help)
 
 
@@ -25,6 +30,7 @@ def create_app():
         collector.add_trading_pair(Currencies.ETH, Currencies.USD)
         # collector.add_trading_pair(Currencies.ETH, Currencies.BTC)
 
-    coin_db.init_app(app)
-    coin_db.create_all(app=app)
+        collector.subscribe_ticker_socket()
+
+    Base.metadata.create_all(engine)
     return app

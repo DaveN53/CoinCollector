@@ -18,7 +18,7 @@ function repeatEvery(func, interval) {
     }
 
     // Delay execution until it's an even interval
-    setTimeout(start, delay-1000);
+    setTimeout(start, delay);
 }
 
 function poll(){
@@ -126,7 +126,13 @@ function renderGraph(){
     yAxis: {
         title: {
             text: 'Value'
-        }
+        },
+
+        plotLines: [{
+            color: '#05757a',
+            width: 2,
+            value: 0 // Need to set this probably as a var.
+        }]
     },
     legend: {
         enable: false
@@ -162,6 +168,6 @@ function renderGraph(){
         name: 'macd_EMA9',
         data: graph_data['ema9'],
         color: 'rgba(218,63,16,1.0)'
-        }]
+        }],
     });
 }

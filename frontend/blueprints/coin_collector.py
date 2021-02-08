@@ -30,7 +30,7 @@ def update():
     Runs every minute to update price data
     :return:
     """
-    collector.get_latest_coin_data()
+    # collector.get_latest_coin_data()  # This is done in a thread w/ the WS
     data = collector.get_graph_data()
 
     # Analyze on a thread so we don't hold up the UI

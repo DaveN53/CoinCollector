@@ -1,11 +1,15 @@
 import enum
 import json
+from contextlib import contextmanager
+from typing import List, Callable
 
 import requests
 from requests import Response
+from websocket import WebSocketApp
 
 TEST_REST_URL = 'https://api-public.sandbox.pro.coinbase.com'
 REST_URL = 'https://api.pro.coinbase.com'
+WEBSOCKET_URL = 'wss://ws-feed.pro.coinbase.com'
 
 
 class ReturnCode(enum.Enum):
@@ -140,3 +144,63 @@ class MarketDataApi(GDAXApi):
         """
         request_url = f'{self.base_url}/time'
         return self.handle_response(requests.get(request_url))
+
+
+class GDAXWebsocket:
+    """
+    Stream product data
+    Store in memory until time frame met then write to DB
+    """
+    def __init__(self):
+        self.__ws = None
+
+    @staticmethod
+    def __handle_error(ws, error):
+        print(f'WS Error: {error}')
+
+    def __open_websocket(self, subscribe_data: dict, process_data_func: Callable):
+        """
+
+        :param subscribe_data: Channel subscribe data
+        :param process_data_func: function that takes two arguments (ws, message)
+        :return:
+        """
+
+        def __on_open(ws):
+            ws.send(data=json.dumps(subscribe_data))
+
+        self.__ws = WebSocketApp(WEBSOCKET_URL, on_message=process_data_func, on_error=self.__handle_error)
+        self.__ws.on_open = __on_open
+        self.__ws.run_forever()
+
+    def close_websocket(self):
+        self.__ws.close()
+
+    def ticker_channel_socket(self, process_data_func: Callable, product_ids = List[str]):
+        """
+        Example Response
+        [{
+            "type": "ticker",
+            "trade_id": 20153558,
+            "sequence": 3262786978,
+            "time": "2017-09-02T17:05:49.250000Z",
+            "product_id": "BTC-USD",
+            "price": "4388.01000000",
+            "side": "buy", // Taker side
+            "last_size": "0.03000000",
+            "best_bid": "4388",
+            "best_ask": "4388.01"
+        },]
+        :param process_data_func: function to process data on socket receive
+        :param product_ids: List of string product ids: ['ETH-USD', 'ETH-BTC']
+        :return:
+        """
+        print('Creating Socket')
+        subscribe_data = {
+            'type': 'subscribe',
+            'product_ids': product_ids,
+            'channels': [{'name': 'ticker', 'product_ids': product_ids}]
+        }
+        self.__open_websocket(subscribe_data, process_data_func=process_data_func)
+        return self.__ws
+

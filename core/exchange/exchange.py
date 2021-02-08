@@ -1,3 +1,5 @@
+from typing import List
+
 from core.enums import OrderAction
 
 
@@ -24,4 +26,7 @@ class Exchange:
         :param market_symbol: currency we're buying it in
         :return:
         """
+        raise NotImplementedError
+
+    def subscribe_ticker_channel(self, product_ids: List[str]):
         raise NotImplementedError

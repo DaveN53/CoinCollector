@@ -17,6 +17,10 @@ class MACD(Indicator):
 
         macd_line, macd_ema_9 = TrendHelper.calculate_moving_average_convergence_divergence(ema_12, ema_26)
         crossed = self.check_cross(macd_line, macd_ema_9)
+        momentum = self.check_momentum(macd_line)
+
+        return crossed, momentum
+
 
     @staticmethod
     def check_cross(macd: List[float], ema_9: List[float]) -> Optional[int]:
@@ -37,3 +41,13 @@ class MACD(Indicator):
             if last_two_ema_9[1] < last_two_macd[1]:
                 return 1
         return None
+
+    def check_momentum(self, macd: List[float]) -> float:
+        """
+
+        :param macd:
+        :return:
+        """
+
+        macd_average = sum(macd) / len(macd)
+        return macd_average
