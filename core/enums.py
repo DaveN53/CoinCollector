@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 class Currencies:
     ETH = 'ETH'
     BTC = 'BTC'
@@ -25,3 +28,8 @@ class OrderAction:
 class ExchangeName:
     GDAX = 'GDAX'
     BINANCE = 'BINANCE'
+
+
+class TradeAction(Enum):
+    BUY = 'BUY'
+    SELL = 'SELL'

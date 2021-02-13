@@ -20,7 +20,8 @@ def create_graph():
     Runs once when page is loaded to create graph
     :return:
     """
-    data = collector.get_candle_graph_data()
+    collector.get_candle_graph_data()
+    data = collector.get_graph_data()
     return jsonify(data)
 
 

@@ -86,30 +86,52 @@ function renderGraph(){
     },
 
     series: [{
-        type: 'area',
-        name: 'Price',
-        data: graph_data['graph_data']['data'],
-        color: 'rgba(244,208,111,1.0)'
+            type: 'area',
+            name: 'Price',
+            data: graph_data['price'],
+            color: 'rgba(244,208,111,1.0)'
         },
         {
-        name: 'EMA5',
-        data: graph_data['ema5'],
-        color: 'rgba(0,153,51,1.0)'
+            name: 'EMA5',
+            data: graph_data['ema5'],
+            color: 'rgba(0,153,51,1.0)',
+            visible: false
         },
         {
-        name: 'EMA12',
-        data: graph_data['ema12'],
-        color: 'rgba(218,63,16,1.0)'
+            name: 'EMA12',
+            data: graph_data['ema12'],
+            color: 'rgba(218,63,16,1.0)'
         },
         {
-        name: 'EMA26',
-        data: graph_data['ema26'],
-        color: 'rgba(16,140,218,1.0)'
+            name: 'EMA26',
+            data: graph_data['ema26'],
+            color: 'rgba(16,140,218,1.0)'
         },
         {
-        name: 'EMA50',
-        data: graph_data['ema50'],
-        color: 'rgba(77,0,77,1.0)'
+            name: 'EMA50',
+            data: graph_data['ema50'],
+            color: 'rgba(77,0,77,1.0)',
+            visible: false
+        },
+        {
+            name: 'Buy',
+            data: graph_data['buy'],
+            color: 'rgb(43, 185, 136)',
+            lineWidth: 0,
+            marker: {
+                enabled: true,
+                radius: 3
+            },
+        },
+        {
+            name: 'Sell',
+            data: graph_data['sell'],
+            color: 'rgb(185, 64, 43)',
+            lineWidth: 0,
+            marker: {
+                enabled: true,
+                radius: 3
+            },
         }
       ]
   });
@@ -168,6 +190,55 @@ function renderGraph(){
         name: 'macd_EMA9',
         data: graph_data['ema9'],
         color: 'rgba(218,63,16,1.0)'
+        }],
+    });
+
+    //Volume
+    // MACD
+  Highcharts.chart('volumehighchart', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Volume'
+    },
+    plotOptions: {
+        column: {
+            grouping: false,
+            groupPadding: 0.0,
+            padding: 0,
+        }
+    },
+    xAxis: {
+                type: 'datetime'
+            },
+    yAxis: {
+        title: {
+            text: 'Trades'
+        },
+
+        plotLines: [{
+            color: '#05757a',
+            width: 2,
+            value: 0
+        }]
+    },
+    legend: {
+        enable: false
+    },
+    scrollbar: {
+        enabled: false
+    },
+
+    series: [{
+        name: 'Buy',
+        data: graph_data['volume']['buy'],
+        color: 'rgb(43, 185, 136)'
+        },
+        {
+        name: 'Sell',
+        data: graph_data['volume']['sell'],
+        color: 'rgb(185, 64, 43)'
         }],
     });
 }

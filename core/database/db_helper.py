@@ -1,9 +1,12 @@
 import time
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import sessionmaker
 
-from core.database.model import Coin, EMA
+from core.database.model import Coin, EMA, Trade
+from enums import TradeAction
+from utilities import get_hc_timestamp
 
 HOUR = 3600
 NUM_LABELS = 12
@@ -23,12 +26,13 @@ class DBHelper:
         session.close()
 
     @staticmethod
-    def retrieve_graph_data_for_time_period(coin_data):
+    def retrieve_graph_data_for_time_period(coin_data, negate_sell_volume: bool = True):
         """
         :param coin_data:
+        :param negate_sell_volume: Represent sell volume as negative numbers. Default to False
         :return:
         """
-        graph_data = {'data': []}
+        graph_data = {'data': [], 'volume': {'buy': [], 'sell': []}}
 
         if coin_data:
             min_value = max_value = coin_data[0].value_market
@@ -37,26 +41,24 @@ class DBHelper:
                     max_value = coin.value_market
                 elif coin.value_market < min_value:
                     min_value = coin.value_market
-                graph_data['data'].append([coin.date * 1000, coin.value_market])
+                graph_data['data'].append([get_hc_timestamp(coin.date), coin.value_market])
+                if coin.sell_volume:
+                    graph_data['volume']['buy'].append([get_hc_timestamp(coin.date), coin.buy_volume])
+                    graph_data['volume']['sell'].append(
+                        [get_hc_timestamp(coin.date),
+                         coin.sell_volume if not negate_sell_volume else -coin.sell_volume])
 
             graph_data['min'] = min_value
             graph_data['max'] = max_value
             graph_data['num_labels'] = NUM_LABELS
         return graph_data
 
-    @staticmethod
-    def get_delete_time(time_period_hours=168):
-        time_period_milli = time_period_hours * HOUR
-        time_now = time.time()
-        delete_time = time_now - time_period_milli
-        return delete_time
-
     def delete_old_coin(self, time_period_hours: int = 6):
         """
         Delete old data from database
         :return:
         """
-        delete_time = self.get_delete_time(time_period_hours=time_period_hours)
+        delete_time = datetime.now() - timedelta(hours=time_period_hours)
         with self.db_session() as session:
             coin_data = session.query(Coin).all()
             for coin in coin_data:
@@ -70,7 +72,8 @@ class DBHelper:
 
             session.commit()
 
-    def build_coin(self, value, buy_volume, sell_volume, coin_symbol, market_symbol, timestamp) -> Coin:
+    @staticmethod
+    def build_coin(value, buy_volume, sell_volume, coin_symbol, market_symbol, timestamp) -> Coin:
         """
         Save coin value to database
         :param value:
@@ -90,7 +93,8 @@ class DBHelper:
             date=timestamp
         )
 
-    def build_ema(self, ema_values: [], symbol, market_coin_symbol, timestamp) -> EMA:
+    @staticmethod
+    def build_ema(ema_values: [], symbol, market_coin_symbol, timestamp) -> EMA:
         return EMA(
             coin_symbol=symbol,
             market_coin_symbol=market_coin_symbol,
@@ -98,6 +102,17 @@ class DBHelper:
             value_twelve=ema_values[1],
             value_twenty_six=ema_values[2],
             value_fifty=ema_values[3],
+            date=timestamp
+        )
+
+    @staticmethod
+    def build_trade(symbol, market_coin_symbol, value_market, amount, buy_sell: TradeAction, timestamp):
+        return Trade(
+            coin_symbol=symbol,
+            market_coin_symbol=market_coin_symbol,
+            value_market=value_market,
+            amount=amount,
+            buy_sell=buy_sell,
             date=timestamp
         )
 
@@ -148,7 +163,7 @@ class DBHelper:
             session.add(ema)
             session.commit()
 
-    def query_coin_db(self, symbol, market_coin_symbol):
+    def query_coin_db(self, symbol, market_coin_symbol, negate_sell_volume: bool = True):
         """
         Query database for all coin data
         :param symbol:
@@ -162,22 +177,30 @@ class DBHelper:
             coin_data = session.query(Coin).filter_by(coin_symbol=symbol, market_coin_symbol=market_coin_symbol
                                                       ).order_by(Coin.id.desc()).limit(300).all()
             coin_data = list(reversed(coin_data))
+            graph_data =  self.retrieve_graph_data_for_time_period(coin_data=coin_data, negate_sell_volume=negate_sell_volume)
+
             query_graph_data = {
-                'price': self.retrieve_graph_data_for_time_period(coin_data=coin_data),
+                'price': graph_data['data'],
+                'volume': graph_data['volume'],
                 'label': "{}/{}".format(symbol, market_coin_symbol),
                 'ema5': [],
                 'ema12': [],
                 'ema26': [],
                 'ema50': []
             }
-            ema_data = session.query(EMA).filter_by(coin_symbol=symbol, market_coin_symbol=market_coin_symbol
-                                           ).order_by(EMA.id.desc()).limit(300).all()
-        ema_data = list(reversed(ema_data))
-
-        for ema in ema_data:
-            query_graph_data['ema5'].append([ema.date * 1000, ema.value_five])
-            query_graph_data['ema12'].append([ema.date * 1000, ema.value_twelve])
-            query_graph_data['ema26'].append([ema.date * 1000, ema.value_twenty_six])
-            query_graph_data['ema50'].append([ema.date * 1000, ema.value_fifty])
 
         return query_graph_data
+
+    def query_ema(self, symbol, market_coin_symbol):
+        with self.db_session() as session:
+            ema_data = session.query(EMA).filter_by(coin_symbol=symbol, market_coin_symbol=market_coin_symbol
+                                                    ).order_by(EMA.id.desc()).limit(300).all()
+            ema_data = list(reversed(ema_data))
+            return ema_data
+
+
+    def query_trades(self, symbol, market_coin_symbol):
+        with self.db_session() as session:
+            trade_data = session.query(Trade).filter_by(coin_symbol=symbol, market_coin_symbol=market_coin_symbol
+                                                        ).order_by(Trade.id.desc()).limit(25).all()
+            return trade_data

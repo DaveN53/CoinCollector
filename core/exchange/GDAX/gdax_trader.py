@@ -107,6 +107,11 @@ class GDAXTrader(Exchange):
 
                                     buy_volume =  sum(buy)
                                     sell_volume = sum(sell)
+
+                                    utc_now = datetime.utcnow()
+                                    utc_now = utc_now - timedelta(seconds=utc_now.second,
+                                                                  microseconds=utc_now.microsecond)
+
                                     try:
                                         coin = self._db_helper.build_coin(
                                             value=price,
@@ -114,7 +119,7 @@ class GDAXTrader(Exchange):
                                             sell_volume=sell_volume,
                                             coin_symbol=product,
                                             market_symbol=curr,
-                                            timestamp=timestamp
+                                            timestamp=utc_now
                                         )
                                         session.add(coin)
                                         print(f'Added Coin to DB')
